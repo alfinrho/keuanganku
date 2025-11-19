@@ -1,0 +1,1101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2113.65">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="id" class="h-full bg-gray-100"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Pencatat Keuangan Pribadi&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Memuat Tailwind CSS --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Memuat Chart.js --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.jsdelivr.net/npm/chart.js"&gt;&lt;/script&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Library untuk PDF &amp; Excel --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"&gt;&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Memuat Supabase Client --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"&gt;&lt;/script&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Menggunakan font Inter */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>html {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Inter', sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>scroll-behavior: smooth;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Custom scrollbar */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>::-webkit-scrollbar {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>::-webkit-scrollbar-track {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: #f1f1f1;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>::-webkit-scrollbar-thumb {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: #c0c0c0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>::-webkit-scrollbar-thumb:hover {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: #a8a8a8;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Menyembunyikan panah di input number */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>input[type='number']::-webkit-outer-spin-button,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>input[type='number']::-webkit-inner-spin-button {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>-webkit-appearance: none;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin: 0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>input[type='number'] {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>-moz-appearance: textfield;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* CSS KHUSUS UNTUK PDF (dipicu oleh JS) */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body.is-printing-pdf .printable-area {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body.is-printing-pdf .printable-area h2 {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.25rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>line-height: 1.75rem;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body.is-printing-pdf .printable-area h3 {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>line-height: 1.5rem;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body.is-printing-pdf .printable-area .annual-table-category {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 15% !important;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>word-break: break-word !important;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>white-space: normal !important;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body.is-printing-pdf .printable-area th,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body.is-printing-pdf .printable-area td {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 4px 6px !important;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 8px !important;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body.is-printing-pdf .no-print {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: none !important;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body.is-printing-pdf .printable-area h2.pdf-hidden {</p>
+<p class="p1"><span class="Apple-converted-space">             </span>display: none !important;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">         </span>body.is-printing-pdf .printable-area h2.pdf-visible {</p>
+<p class="p1"><span class="Apple-converted-space">             </span>display: block !important;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Banner Demo Mode */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#demo-banner {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: #FFF7ED;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: #C05621;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-bottom: 1px solid #FED7D7;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 0.5rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.875rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 500;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;body class="h-full bg-gray-100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Latar belakang gelap untuk modal --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden no-print"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 1. Overlay Login --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 p-4 no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="w-full max-w-sm p-8 bg-white rounded-2xl shadow-xl"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h2 class="text-3xl font-bold text-center text-gray-800"&gt;Hai Alfin Rho&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="mt-2 text-center text-gray-500"&gt;Masukkan password untuk update transaksi keuanganmu&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;form id="login-form" class="mt-8 space-y-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;label for="password" class="sr-only"&gt;Password&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;input id="password" name="password" type="password" required</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>class="w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>placeholder="Password"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;p id="login-error" class="text-sm text-red-600 text-center hidden"&gt;Password salah. Coba lagi.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button type="submit"</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>class="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Login</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 2. Konten Aplikasi Utama (Awalnya Tersembunyi) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="main-app-content" class="hidden h-full flex flex-col"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Banner Demo Mode --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="demo-banner" class="hidden no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>Mode Demo: Data disimpan sementara di browser. Cek koneksi Supabase Anda.</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Header / Navigasi Atas --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;header class="bg-white shadow-md w-full p-4 flex justify-between items-center z-10 sticky top-0 no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="flex items-baseline space-x-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h1 class="text-2xl font-bold text-blue-700"&gt;Keuanganku&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Menu Navigasi --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;nav&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;ul class="flex space-x-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;a href="#" data-view="view-beranda" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Beranda</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;a href="#" data-view="view-laporan-bulanan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Laporan Bulanan</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;a href="#" data-view="view-laporan-tahunan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Laporan Tahunan</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;a href="#" data-view="view-transaksi-anomali" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Transaksi Anomali</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;a href="#" data-view="view-master-setting" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>Master Setting</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/ul&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/nav&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span id="user-id-display" class="text-xs text-gray-400 truncate" title="User ID"&gt;&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Konten Utama (Views) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;main class="flex-1 overflow-y-auto p-8"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Tampilan 1: Beranda --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="view-beranda" class="view-content grid grid-cols-1 lg:grid-cols-3 gap-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Kolom Kiri &amp; Tengah --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="lg:col-span-2 space-y-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-white p-6 rounded-2xl shadow-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h2 class="text-xl font-semibold mb-5"&gt;Summary (Bulan Ini)&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="grid grid-cols-1 md:grid-cols-3 gap-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="bg-green-50 p-5 rounded-xl border border-green-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-sm font-medium text-green-600"&gt;Pemasukan&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div id="summary-income" class="text-2xl font-bold text-green-800 mt-1"&gt;IDR 0&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="bg-red-50 p-5 rounded-xl border border-red-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-sm font-medium text-red-600"&gt;Pengeluaran&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div id="summary-expense" class="text-2xl font-bold text-red-800 mt-1"&gt;IDR 0&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="bg-blue-50 p-5 rounded-xl border border-blue-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="text-sm font-medium text-blue-600"&gt;Saldo&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div id="summary-balance" class="text-2xl font-bold text-blue-800 mt-1"&gt;IDR 0&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-white p-6 rounded-2xl shadow-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex justify-between items-center mb-5"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h2 class="text-xl font-semibold"&gt;Riwayat Transaksi (Bulan Ini)&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button id="open-excel-modal"</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-green-600 hover:bg-green-700 transition-colors no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                  </span>&lt;path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 9.293a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span&gt;Download Excel&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="overflow-x-auto"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;table class="min-w-full divide-y divide-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;thead class="bg-gray-50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"&gt;Tanggal&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"&gt;Kategori&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"&gt;Keterangan&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"&gt;Jumlah&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/thead&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;tbody id="transaction-list" class="bg-white divide-y divide-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;tr&gt;&lt;td colspan="4" class="px-6 py-4 text-center text-gray-500"&gt;Belum ada transaksi bulan ini.&lt;/td&gt;&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/tbody&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/table&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Kolom Kanan (Form) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="lg:col-span-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-white p-6 rounded-2xl shadow-lg sticky top-24 no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="bg-gray-50 p-5 rounded-xl border border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h2 class="text-lg font-semibold text-gray-800 mb-4"&gt;Tambah Transaksi&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;form id="transaction-form" class="space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;label for="date" class="block text-sm font-medium text-gray-700"&gt;Tanggal&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="date" id="date" name="date" required</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;label for="type" class="block text-sm font-medium text-gray-700"&gt;Jenis&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;select id="type" name="type" required</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>&lt;option value="pengeluaran"&gt;Pengeluaran&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>&lt;option value="pemasukan"&gt;Pemasukan&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;label for="category" class="block text-sm font-medium text-gray-700"&gt;Kategori&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;select id="category" name="category" required</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>disabled&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>&lt;option value=""&gt;Pilih jenis dulu...&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;label for="amount" class="block text-sm font-medium text-gray-700"&gt;Jumlah (IDR)&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;input type="number" id="amount" name="amount" required min="0" placeholder="50000"</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;label for="description" class="block text-sm font-medium text-gray-700"&gt;Keterangan&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;textarea id="description" name="description" rows="2" placeholder="Cth: Kopi susu"</p>
+<p class="p1"><span class="Apple-converted-space">                                            </span>class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;/textarea&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;button type="submit"</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>class="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>Simpan Transaksi</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;p id="form-status" class="text-sm text-green-600 text-center mt-2"&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/form&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Tampilan 2: Laporan Bulanan --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="view-laporan-bulanan" class="view-content hidden space-y-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="bg-white p-6 rounded-2xl shadow-lg printable-area"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex justify-between items-center mb-4 no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h2 class="text-2xl font-bold pdf-hidden"&gt;Laporan Bulanan&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button id="download-monthly-pdf"</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>&lt;path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 9.293a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;Download PDF&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-2xl font-bold mb-4 hidden pdf-visible"&gt;Laporan Bulanan&lt;/h2&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="monthly-report-month" class="block text-sm font-medium text-gray-700"&gt;Bulan&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;select id="monthly-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="monthly-report-year" class="block text-sm font-medium text-gray-700"&gt;Tahun&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;select id="monthly-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="monthly-report-info-pdf" class="mb-4 hidden pdf-visible"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="monthly-report-summary" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="bg-green-50 p-5 rounded-xl border border-green-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="text-sm font-medium text-green-600"&gt;Total Pemasukan&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div id="monthly-report-income" class="text-2xl font-bold text-green-800 mt-1"&gt;IDR 0&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="bg-red-50 p-5 rounded-xl border border-red-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="text-sm font-medium text-red-600"&gt;Total Pengeluaran&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div id="monthly-report-expense" class="text-2xl font-bold text-red-800 mt-1"&gt;IDR 0&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="bg-blue-50 p-5 rounded-xl border border-blue-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="text-sm font-medium text-blue-600"&gt;Arus Kas&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div id="monthly-report-cashflow" class="text-2xl font-bold text-blue-800 mt-1"&gt;IDR 0&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-lg font-semibold mb-3"&gt;Arus Kas&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;canvas id="monthly-cashflow-chart"&gt;&lt;/canvas&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-lg font-semibold mb-3"&gt;Pemasukan&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;canvas id="monthly-income-chart"&gt;&lt;/canvas&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-lg font-semibold mb-3"&gt;Pengeluaran&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;canvas id="monthly-expense-chart"&gt;&lt;/canvas&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid grid-cols-1 lg:grid-cols-2 gap-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-lg font-semibold mb-3 text-green-700"&gt;Rincian Pemasukan&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div id="monthly-income-table" class="max-h-96 overflow-y-auto"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-lg font-semibold mb-3 text-red-700"&gt;Rincian Pengeluaran&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div id="monthly-expense-table" class="max-h-96 overflow-y-auto"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Tampilan 3: Laporan Tahunan --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="view-laporan-tahunan" class="view-content hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="bg-white p-6 rounded-2xl shadow-lg printable-area"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex justify-between items-center mb-4 no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h2 class="text-2xl font-bold pdf-hidden"&gt;Laporan Pemasukan &amp; Pengeluaran Tahunan&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button id="download-annual-pdf"</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                              </span>&lt;path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 9.293a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;Download PDF&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-2xl font-bold mb-4 hidden pdf-visible"&gt;Laporan Pemasukan &amp; Pengeluaran Tahunan&lt;/h2&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="annual-report-month" class="block text-sm font-medium text-gray-700"&gt;Mulai Bulan&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;select id="annual-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;label for="annual-report-year" class="block text-sm font-medium text-gray-700"&gt;Mulai Tahun&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;select id="annual-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="annual-report-info-pdf" class="mb-4 hidden pdf-visible"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="p-5 rounded-xl border border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-lg font-semibold mb-3 text-center"&gt;Pemasukan 12 Bulan&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;canvas id="annual-income-chart" height="200"&gt;&lt;/canvas&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="p-5 rounded-xl border border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-lg font-semibold mb-3 text-center"&gt;Pengeluaran 12 Bulan&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;canvas id="annual-expense-chart" height="200"&gt;&lt;/canvas&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="p-5 rounded-xl border border-gray-200 mb-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h3 class="text-lg font-semibold mb-3 text-center"&gt;Arus Kas (Cash Flow) 12 Bulan&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;canvas id="annual-cashflow-chart" height="150"&gt;&lt;/canvas&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="space-y-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-xl font-semibold mb-3 text-blue-700"&gt;Overview&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="overflow-x-auto shadow rounded-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;table class="min-w-full divide-y divide-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;thead class="bg-blue-600 text-white"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;tr id="annual-overview-header"&gt;&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/thead&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;tbody id="annual-overview-body" class="bg-white divide-y divide-gray-200"&gt;&lt;/tbody&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/table&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-xl font-semibold mb-3 text-green-700"&gt;Pemasukan Bulanan&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="overflow-x-auto shadow rounded-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;table class="min-w-full divide-y divide-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;thead class="bg-green-600 text-white"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;tr id="annual-income-header"&gt;&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/thead&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;tbody id="annual-income-body" class="bg-white divide-y divide-gray-200"&gt;&lt;/tbody&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/table&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-xl font-semibold mb-3 text-red-700"&gt;Pengeluaran Bulanan&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="overflow-x-auto shadow rounded-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;table class="min-w-full divide-y divide-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;thead class="bg-red-600 text-white"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;tr id="annual-expense-header"&gt;&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/thead&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;tbody id="annual-expense-body" class="bg-white divide-y divide-gray-200"&gt;&lt;/tbody&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/table&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Tampilan 4: Transaksi Anomali --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="view-transaksi-anomali" class="view-content hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="bg-white p-6 rounded-2xl shadow-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h2 class="text-2xl font-bold mb-4"&gt;Deteksi Transaksi Anomali (Pengeluaran)&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;p class="text-gray-600 mb-6 pb-6 border-b border-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>Menampilkan transaksi pengeluaran yang nilainya &lt;strong&gt;3x lebih besar&lt;/strong&gt; DAN<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;strong&gt;minimal 100.000 IDR&lt;/strong&gt; di atas rata-rata 90 hari sebelumnya untuk kategori yang sama.</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/p&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="overflow-x-auto"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;table class="min-w-full divide-y divide-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;thead class="bg-gray-50"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"&gt;Tanggal&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"&gt;Kategori&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"&gt;Keterangan&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"&gt;Jumlah (IDR)&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"&gt;Rata-rata (90 Hari)&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/thead&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;tbody id="anomaly-list" class="bg-white divide-y divide-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;tr&gt;&lt;td colspan="5" class="px-6 py-4 text-center text-gray-500"&gt;Menganalisis data...&lt;/td&gt;&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/tbody&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/table&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- Tampilan 5: Master Setting --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="view-master-setting" class="view-content hidden"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="bg-white p-6 rounded-2xl shadow-lg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex justify-between items-center mb-6 no-print"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h2 class="text-2xl font-bold"&gt;Master Kategori&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button id="add-category-btn"</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>class="py-2 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 transition-colors"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>+ Tambah Kategori</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="grid grid-cols-1 md:grid-cols-2 gap-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-lg font-semibold text-green-700 mb-3 pb-3 border-b border-gray-200"&gt;Kategori Pemasukan&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;ul id="master-pemasukan-list" class="divide-y divide-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;li class="py-2 text-gray-500"&gt;Memuat...&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/ul&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-lg font-semibold text-red-700 mb-3 pb-3 border-b border-gray-200"&gt;Kategori Pengeluaran&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;ul id="master-pengeluaran-list" class="divide-y divide-gray-200"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;li class="py-2 text-gray-500"&gt;Memuat...&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/ul&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/main&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- 3. Modals --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="status-modal" class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-xl transition-all translate-y-16 opacity-0 hidden no-print" role="alert"&gt;&lt;p id="status-message"&gt;Status message&lt;/p&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="category-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"&gt;&lt;div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"&gt;&lt;h3 id="category-modal-title" class="text-xl font-semibold mb-6"&gt;Tambah Kategori Baru&lt;/h3&gt;&lt;form id="category-modal-form"&gt;&lt;input type="hidden" id="category-modal-id"&gt;&lt;div class="space-y-4"&gt;&lt;div&gt;&lt;label for="category-modal-name" class="block text-sm font-medium text-gray-700"&gt;Nama Kategori&lt;/label&gt;&lt;input type="text" id="category-modal-name" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;/div&gt;&lt;div&gt;&lt;label for="category-modal-type" class="block text-sm font-medium text-gray-700"&gt;Jenis&lt;/label&gt;&lt;select id="category-modal-type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;option value="pemasukan"&gt;Pemasukan&lt;/option&gt;&lt;option value="pengeluaran"&gt;Pengeluaran&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;div&gt;&lt;label for="category-modal-note" class="block text-sm font-medium text-gray-700"&gt;Keterangan (Opsional)&lt;/label&gt;&lt;textarea id="category-modal-note" rows="2" placeholder="Cth: Untuk Gaji dan Bonus" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;/textarea&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="flex justify-end space-x-3 mt-8"&gt;&lt;button type="button" id="category-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium"&gt;Batal&lt;/button&gt;&lt;button type="button" id="category-modal-cancel-submit" class="hidden"&gt;Submit&lt;/button&gt;&lt;button type="submit" class="py-2 px-4 rounded-lg text-white bg-blue-600 hover:bg-blue-700 font-medium"&gt;Simpan&lt;/button&gt;&lt;/div&gt;&lt;/form&gt;&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="excel-download-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"&gt;&lt;div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"&gt;&lt;h3 class="text-xl font-semibold mb-6"&gt;Download Riwayat Transaksi&lt;/h3&gt;&lt;p class="text-sm text-gray-600 mb-4"&gt;Pilih periode transaksi yang ingin di-download sebagai file Excel.&lt;/p&gt;&lt;div class="space-y-4"&gt;&lt;div&gt;&lt;label for="excel-month-select" class="block text-sm font-medium text-gray-700"&gt;Bulan&lt;/label&gt;&lt;select id="excel-month-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;/select&gt;&lt;/div&gt;&lt;div&gt;&lt;label for="excel-year-select" class="block text-sm font-medium text-gray-700"&gt;Tahun&lt;/label&gt;&lt;select id="excel-year-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;/select&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="flex justify-end space-x-3 mt-8"&gt;&lt;button type="button" id="excel-download-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium"&gt;Batal&lt;/button&gt;&lt;button type="button" id="download-excel-confirm" class="py-2 px-4 rounded-lg text-white bg-green-600 hover:bg-green-700 font-medium"&gt;Download&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"&gt;&lt;div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"&gt;&lt;h3 class="text-xl font-semibold mb-4"&gt;Verifikasi Hapus&lt;/h3&gt;&lt;p class="text-gray-600 mb-4"&gt;Untuk menghapus kategori ini, masukkan password Anda:&lt;/p&gt;&lt;input type="hidden" id="delete-modal-id"&gt;&lt;input type="password" id="delete-modal-password" placeholder="Password" class="w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"&gt;&lt;p id="delete-modal-error" class="text-sm text-red-600 mt-2 hidden"&gt;Password salah.&lt;/p&gt;&lt;div class="flex justify-end space-x-3 mt-6"&gt;&lt;button type="button" id="delete-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium"&gt;Batal&lt;/button&gt;&lt;button type="button" id="delete-modal-confirm" class="py-2 px-4 rounded-lg text-white bg-red-600 hover:bg-red-700 font-medium"&gt;Hapus&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"&gt;&lt;div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"&gt;&lt;h3 class="text-xl font-semibold mb-4"&gt;Konfirmasi&lt;/h3&gt;&lt;p id="confirm-modal-text" class="text-gray-600 mb-6"&gt;Apakah Anda yakin ingin menyimpan perubahan ini?&lt;/p&gt;&lt;div class="flex justify-end space-x-3"&gt;&lt;button type="button" id="confirm-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium"&gt;Batal&lt;/button&gt;&lt;button type="button" id="confirm-modal-confirm" class="py-2 px-4 rounded-lg text-white bg-blue-600 hover:bg-blue-700 font-medium"&gt;Yakin&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- SUPABASE SCRIPT (Pengganti Firebase) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script type="module"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- KONFIGURASI SUPABASE ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const SUPABASE_URL = 'https://azgkrncmbalimhwickmm.supabase.co';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const SUPABASE_KEY = 'sb_publishable_0JKn3axQn0QEqSGsgtCg1Q_Bi-QCYM2';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const { jsPDF } = window.jspdf;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const { createClient } = supabase;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- MOCK DB (Untuk Preview) ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>class MockClient {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>constructor() {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>this.auth = {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>getUser: async () =&gt; ({ data: { user: { id: 'mock-user-id' } }, error: null }),</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>getSession: async () =&gt; ({ data: { session: { user: { id: 'mock-user-id' } } }, error: null }),</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>signUp: async () =&gt; ({ data: { user: { id: 'mock-user-id' } }, error: null }),</p>
+<p class="p1"><span class="Apple-converted-space">                </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>channel() { return { on: () =&gt; ({ on: () =&gt; ({ on: () =&gt; ({ on: () =&gt; ({ subscribe: () =&gt; {} }) }) }) }) }; }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>from(table) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const key = `mock_${table}`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>select: (cols) =&gt; ({</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>eq: async (col, val) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>let data = JSON.parse(localStorage.getItem(key) || '[]');</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>if (col === 'user_id') data = data.filter(d =&gt; d.user_id === val);</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>return { data, error: null };</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}),</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>insert: async (data) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>let current = JSON.parse(localStorage.getItem(key) || '[]');</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const rows = Array.isArray(data) ? data : [data];</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>rows.forEach(r =&gt; { if(!r.id) r.id = Date.now() + Math.random(); current.push(r); });</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>localStorage.setItem(key, JSON.stringify(current));</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>return { error: null };</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>},</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>update: (data) =&gt; ({</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>eq: (col, val) =&gt; ({</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>eq: async (col2, val2) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>let current = JSON.parse(localStorage.getItem(key) || '[]');</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>current = current.map(r =&gt; (r[col] == val &amp;&amp; r[col2] == val2) ? {...r, ...data} : r);</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>localStorage.setItem(key, JSON.stringify(current));</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>return { error: null };</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>})</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}),</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>delete: () =&gt; ({</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>eq: (col, val) =&gt; ({</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>eq: async (col2, val2) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>let current = JSON.parse(localStorage.getItem(key) || '[]');</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>current = current.filter(r =&gt; !(r[col] == val &amp;&amp; r[col2] == val2));</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>localStorage.setItem(key, JSON.stringify(current));</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>return { error: null };</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>})</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>})</p>
+<p class="p1"><span class="Apple-converted-space">                </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let db;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (SUPABASE_URL.includes("URL_PROYEK_ANDA")) {</p>
+<p class="p1"><span class="Apple-converted-space">             </span>console.warn("Konfigurasi Supabase belum diset. Beralih ke Mode Demo.");</p>
+<p class="p1"><span class="Apple-converted-space">             </span>db = new MockClient();</p>
+<p class="p1"><span class="Apple-converted-space">             </span>document.getElementById('demo-banner').classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">             </span>db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true } });</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let userId;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let categoriesData = { pemasukan: [], pengeluaran: [] };</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let allTransactions = [];<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let currentMonthTransactions = [];<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let charts = {};<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let confirmAction = null;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Elemen UI (Didefinisikan di level modul agar bisa diakses semua fungsi)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const loginOverlay = document.getElementById('login-overlay');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const loginForm = document.getElementById('login-form');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const loginError = document.getElementById('login-error');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const mainAppContent = document.getElementById('main-app-content');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const userIdDisplay = document.getElementById('user-id-display');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const transactionForm = document.getElementById('transaction-form');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const typeSelect = document.getElementById('type');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categorySelect = document.getElementById('category');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const dateInput = document.getElementById('date');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const amountInput = document.getElementById('amount');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const descriptionInput = document.getElementById('description');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const formStatus = document.getElementById('form-status');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const summaryIncome = document.getElementById('summary-income');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const summaryExpense = document.getElementById('summary-expense');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const summaryBalance = document.getElementById('summary-balance');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const transactionList = document.getElementById('transaction-list');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const navLinks = document.querySelectorAll('.nav-link');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const views = document.querySelectorAll('.view-content');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const masterPemasukanList = document.getElementById('master-pemasukan-list');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const masterPengeluaranList = document.getElementById('master-pengeluaran-list');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const addCategoryBtn = document.getElementById('add-category-btn');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const modalBackdrop = document.getElementById('modal-backdrop');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const statusModal = document.getElementById('status-modal');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const statusMessage = document.getElementById('status-message');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categoryModal = document.getElementById('category-modal');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categoryModalForm = document.getElementById('category-modal-form');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categoryModalTitle = document.getElementById('category-modal-title');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categoryModalId = document.getElementById('category-modal-id');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categoryModalName = document.getElementById('category-modal-name');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categoryModalType = document.getElementById('category-modal-type');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categoryModalNote = document.getElementById('category-modal-note');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const categoryModalCancel = document.getElementById('category-modal-cancel');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const deleteModal = document.getElementById('delete-modal');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const deleteModalId = document.getElementById('delete-modal-id');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const deleteModalPassword = document.getElementById('delete-modal-password');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const deleteModalError = document.getElementById('delete-modal-error');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const deleteModalCancel = document.getElementById('delete-modal-cancel');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const deleteModalConfirm = document.getElementById('delete-modal-confirm');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const confirmModal = document.getElementById('confirm-modal');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const confirmModalText = document.getElementById('confirm-modal-text');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const confirmModalCancel = document.getElementById('confirm-modal-cancel');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const confirmModalConfirm = document.getElementById('confirm-modal-confirm');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const openExcelModalBtn = document.getElementById('open-excel-modal');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const excelDownloadModal = document.getElementById('excel-download-modal');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const excelMonthSelect = document.getElementById('excel-month-select');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const excelYearSelect = document.getElementById('excel-year-select');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const excelDownloadCancelBtn = document.getElementById('excel-download-cancel');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const excelDownloadConfirmBtn = document.getElementById('download-excel-confirm');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const downloadMonthlyPdfBtn = document.getElementById('download-monthly-pdf');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const downloadAnnualPdfBtn = document.getElementById('download-annual-pdf');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const monthlyReportMonthSelect = document.getElementById('monthly-report-month');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const monthlyReportYearSelect = document.getElementById('monthly-report-year');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const monthlyReportInfoPdf = document.getElementById('monthly-report-info-pdf');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const monthlyReportIncome = document.getElementById('monthly-report-income');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const monthlyReportExpense = document.getElementById('monthly-report-expense');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const monthlyReportCashflow = document.getElementById('monthly-report-cashflow');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const monthlyIncomeTable = document.getElementById('monthly-income-table');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const monthlyExpenseTable = document.getElementById('monthly-expense-table');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const annualReportMonthSelect = document.getElementById('annual-report-month');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const annualReportYearSelect = document.getElementById('annual-report-year');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const annualReportInfoPdf = document.getElementById('annual-report-info-pdf');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const anomalyList = document.getElementById('anomaly-list');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- FUNGSI ---</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function showStatus(message, isError = false, duration = 3000) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>statusMessage.textContent = message;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>statusModal.classList.remove('hidden', 'bg-gray-800', 'bg-red-600', 'translate-y-16', 'opacity-0');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>statusModal.classList.add(isError ? 'bg-red-600' : 'bg-gray-800', 'translate-y-0', 'opacity-100');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>setTimeout(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>statusModal.classList.add('translate-y-16', 'opacity-0');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>statusModal.classList.remove('translate-y-0', 'opacity-100');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>setTimeout(() =&gt; statusModal.classList.add('hidden'), 300);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}, duration);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function formatCurrency(amount) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function showModal(el) { modalBackdrop.classList.remove('hidden'); el.classList.remove('hidden'); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function hideModal(el) { modalBackdrop.classList.add('hidden'); el.classList.add('hidden'); }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function downloadElementAsPDF(elementToCapture, filename) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>showStatus("Mempersiapkan PDF...", false, 5000);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.body.classList.add('is-printing-pdf');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const canvas = await html2canvas(elementToCapture, {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>scale: 2, useCORS: true, logging: false,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>onclone: (doc) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>doc.querySelectorAll('.no-print').forEach(el =&gt; el.style.display = 'none');</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>doc.querySelectorAll('.printable-area h2.pdf-visible').forEach(el =&gt; el.style.display = 'block');</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>doc.querySelectorAll('.printable-area .pdf-visible').forEach(el =&gt; el.style.display = 'block');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const imgData = canvas.toDataURL('image/png');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const imgWidth = canvas.width;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const imgHeight = canvas.height;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const pdf = new jsPDF('l', 'mm', 'a4');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const pdfWidth = pdf.internal.pageSize.getWidth();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const pdfHeight = pdf.internal.pageSize.getHeight();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const margin = 5;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>const usableWidth = pdfWidth - (margin * 2);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const ratio = imgWidth / usableWidth;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const scaledImgHeight = imgHeight / ratio;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>let heightLeft = scaledImgHeight;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>let position = margin;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>pdf.addImage(imgData, 'PNG', margin, position, usableWidth, scaledImgHeight);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>heightLeft -= (pdfHeight - (margin * 2));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>while (heightLeft &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>position = heightLeft - scaledImgHeight + margin;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>pdf.addPage();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>pdf.addImage(imgData, 'PNG', margin, position, usableWidth, scaledImgHeight);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>heightLeft -= (pdfHeight - (margin * 2));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>pdf.save(filename);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showStatus("PDF berhasil di-download.");</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>console.error("Gagal membuat PDF:", error);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showStatus("Gagal membuat PDF. Coba lagi.", true);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} finally {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.body.classList.remove('is-printing-pdf');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function downloadMonthlyReportAsPDF() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const month = monthlyReportMonthSelect.options[monthlyReportMonthSelect.selectedIndex].text;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const year = monthlyReportYearSelect.value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const filename = `Laporan_Bulanan_${month}_${year}.pdf`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const element = document.getElementById('view-laporan-bulanan').querySelector('.printable-area');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>await downloadElementAsPDF(element, filename);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function downloadAnnualReportAsPDF() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const month = annualReportMonthSelect.options[annualReportMonthSelect.selectedIndex].text;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const year = annualReportYearSelect.value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const filename = `Laporan_Tahunan_${month}_${year}.pdf`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const element = document.getElementById('view-laporan-tahunan').querySelector('.printable-area');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>await downloadElementAsPDF(element, filename);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function openExcelDownloadModal() { showModal(excelDownloadModal); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function downloadTransactionsAsExcel() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const selectedMonth = parseInt(excelMonthSelect.value);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const selectedYear = parseInt(excelYearSelect.value);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const monthName = excelMonthSelect.options[excelMonthSelect.selectedIndex].text;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const filteredTx = allTransactions.filter(tx =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const txDate = new Date(tx.date);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return txDate.getMonth() === selectedMonth &amp;&amp; txDate.getFullYear() === selectedYear;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (filteredTx.length === 0) { showStatus("Tidak ada data transaksi untuk periode ini.", true); return; }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const dataForExcel = filteredTx.sort((a, b) =&gt; new Date(a.date) - new Date(b.date)).map(tx =&gt; ({</p>
+<p class="p1"><span class="Apple-converted-space">                </span>'Tanggal': new Date(tx.date).toLocaleDateString('id-ID'), 'Jenis': tx.type, 'Kategori': tx.category,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>'Jumlah': tx.amount, 'Keterangan': tx.description || '-'</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const ws = XLSX.utils.json_to_sheet(dataForExcel);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ws['!cols'] = [{ wch: 12 }, { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 40 }];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const wb = XLSX.utils.book_new();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>XLSX.utils.book_append_sheet(wb, ws, `Transaksi ${monthName} ${selectedYear}`);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>XLSX.writeFile(wb, `Riwayat_Transaksi_${monthName}_${selectedYear}.xlsx`);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>hideModal(excelDownloadModal);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>showStatus("Download Excel berhasil dimulai.");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// FUNGSI INIT FILTERS (DEFINISIKAN SEBELUM DIPANGGIL)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function initFilters() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const now = new Date();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const currentMonth = now.getMonth();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const currentYear = now.getFullYear();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const years = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4];<span class="Apple-converted-space"> </span></p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportMonthSelect.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>annualReportMonthSelect.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>excelMonthSelect.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>MONTH_NAMES.forEach((month, index) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const option = document.createElement('option');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>option.value = index;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>option.textContent = month;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>monthlyReportMonthSelect.appendChild(option.cloneNode(true));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>annualReportMonthSelect.appendChild(option.cloneNode(true));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>excelMonthSelect.appendChild(option);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportYearSelect.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>annualReportYearSelect.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>excelYearSelect.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>years.forEach(year =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const option = document.createElement('option');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>option.value = year;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>option.textContent = year;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>monthlyReportYearSelect.appendChild(option.cloneNode(true));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>annualReportYearSelect.appendChild(option.cloneNode(true));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>excelYearSelect.appendChild(option);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportMonthSelect.value = currentMonth;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportYearSelect.value = currentYear;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>excelMonthSelect.value = currentMonth;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>excelYearSelect.value = currentYear;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>annualReportMonthSelect.value = 0;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>annualReportYearSelect.value = currentYear;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportMonthSelect.addEventListener('change', renderMonthlyReport);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportYearSelect.addEventListener('change', renderMonthlyReport);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>annualReportMonthSelect.addEventListener('change', renderAnnualReport);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>annualReportYearSelect.addEventListener('change', renderAnnualReport);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function loadCategories() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const { data, error } = await db.from('categories').select('*').eq('user_id', userId);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (error) { console.error(error); return; }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>categoriesData.pemasukan = data.filter(c =&gt; c.type === 'pemasukan');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>categoriesData.pengeluaran = data.filter(c =&gt; c.type === 'pengeluaran');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (data.length === 0) await initDefaultCategories();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>else { updateCategoryOptions(); renderMasterSettings(); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function loadTransactions() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const { data, error } = await db.from('transactions').select('*').eq('user_id', userId);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (error) { console.error(error); return; }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>allTransactions = data;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderDashboard();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function initDefaultCategories() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const defaultCats = [</p>
+<p class="p1"><span class="Apple-converted-space">                </span>{ name: "Gaji", type: "pemasukan", user_id: userId }, { name: "Bonus", type: "pemasukan", user_id: userId },</p>
+<p class="p1"><span class="Apple-converted-space">                </span>{ name: "Makan", type: "pengeluaran", user_id: userId }, { name: "Transport", type: "pengeluaran", user_id: userId }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>await db.from('categories').insert(defaultCats);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>await loadCategories();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function updateCategoryOptions() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const selectedType = typeSelect.value;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const cats = categoriesData[selectedType] || [];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>categorySelect.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>cats.forEach(c =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const opt = document.createElement('option');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>opt.value = c.name;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>opt.textContent = c.name;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>categorySelect.appendChild(opt);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>categorySelect.disabled = cats.length === 0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderMasterSettings() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>masterPemasukanList.innerHTML = ''; masterPengeluaranList.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const renderList = (list, container) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>list.forEach(cat =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const li = document.createElement('li');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>li.className = 'flex justify-between py-2';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>li.innerHTML = `&lt;span&gt;${cat.name}&lt;/span&gt;&lt;div class="no-print"&gt;&lt;button onclick="window.openCategoryModal('edit', ${cat.id})" class="text-blue-500 mr-2"&gt;Edit&lt;/button&gt;&lt;button onclick="window.openDeleteModal(${cat.id})" class="text-red-500"&gt;Hapus&lt;/button&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>container.appendChild(li);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderList(categoriesData.pemasukan, masterPemasukanList);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderList(categoriesData.pengeluaran, masterPengeluaranList);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderDashboard() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let inc = 0, exp = 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const now = new Date();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const curMonthTx = allTransactions.filter(t =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const d = new Date(t.date);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return d.getMonth() === now.getMonth() &amp;&amp; d.getFullYear() === now.getFullYear();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>curMonthTx.sort((a,b) =&gt; new Date(b.date) - new Date(a.date));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transactionList.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>curMonthTx.forEach(t =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if(t.type === 'pemasukan') inc += t.amount; else exp += t.amount;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>transactionList.innerHTML += `&lt;tr class="${t.type === 'pemasukan' ? 'bg-green-50' : 'bg-red-50'}"&gt;&lt;td class="px-4 py-2"&gt;${new Date(t.date).toLocaleDateString('id-ID')}&lt;/td&gt;&lt;td class="px-4 py-2"&gt;${t.category}&lt;/td&gt;&lt;td class="px-4 py-2"&gt;${t.description || '-'}&lt;/td&gt;&lt;td class="px-4 py-2 text-right"&gt;${formatCurrency(t.amount)}&lt;/td&gt;&lt;/tr&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>summaryIncome.textContent = formatCurrency(inc);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>summaryExpense.textContent = formatCurrency(exp);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>summaryBalance.textContent = formatCurrency(inc - exp);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderMonthlyReport() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const selectedMonth = parseInt(monthlyReportMonthSelect.value);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const selectedYear = parseInt(monthlyReportYearSelect.value);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const monthName = MONTH_NAMES[selectedMonth];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportInfoPdf.innerHTML = `&lt;h3 class="text-xl font-semibold mb-4"&gt;Periode: ${monthName} ${selectedYear}&lt;/h3&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportInfoPdf.style.display = 'none';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let totalIncome = 0, totalExpense = 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const incomeByCategory = {}, expenseByCategory = {};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const filteredTx = allTransactions.filter(tx =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const txDate = new Date(tx.date);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return txDate.getMonth() === selectedMonth &amp;&amp; txDate.getFullYear() === selectedYear;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>filteredTx.forEach(tx =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (tx.type === 'pemasukan') { totalIncome += tx.amount; incomeByCategory[tx.category] = (incomeByCategory[tx.category] || 0) + tx.amount; }<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>else { totalExpense += tx.amount; expenseByCategory[tx.category] = (expenseByCategory[tx.category] || 0) + tx.amount; }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportIncome.textContent = formatCurrency(totalIncome);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportExpense.textContent = formatCurrency(totalExpense);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>monthlyReportCashflow.textContent = formatCurrency(totalIncome - totalExpense);</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const destroyChart = (cid) =&gt; { if(charts[cid]) charts[cid].destroy(); };</p>
+<p class="p1"><span class="Apple-converted-space">            </span>destroyChart('cashflow');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>charts['cashflow'] = new Chart(document.getElementById('monthly-cashflow-chart').getContext('2d'), { type: 'bar', data: { labels: ['Arus Kas'], datasets: [{ label: 'Pemasukan', data: [totalIncome], backgroundColor: '#22c55e' }, { label: 'Pengeluaran', data: [totalExpense], backgroundColor: '#ef4444' }] }, options: { plugins: { legend: { display: false } } } });</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const renderDoughnut = (cid, data, color) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>destroyChart(cid);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>charts[cid] = new Chart(document.getElementById(cid).getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: color }] }, options: { plugins: { legend: { position: 'bottom' } } } });</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderDoughnut('monthly-income-chart', incomeByCategory, ['#10b981']);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderDoughnut('monthly-expense-chart', expenseByCategory, ['#ef4444']);</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const renderTable = (data, el) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>el.innerHTML = Object.entries(data).map(([k,v]) =&gt; `&lt;tr&gt;&lt;td class="p-2"&gt;${k}&lt;/td&gt;&lt;td class="p-2 text-right"&gt;${formatCurrency(v)}&lt;/td&gt;&lt;/tr&gt;`).join('');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderTable(incomeByCategory, monthlyIncomeTable);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderTable(expenseByCategory, monthlyExpenseTable);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderAnnualReport() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const startMonth = parseInt(annualReportMonthSelect.value);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const startYear = parseInt(annualReportYearSelect.value);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const cats = { pemasukan: categoriesData.pemasukan.map(c =&gt; c.name), pengeluaran: categoriesData.pengeluaran.map(c =&gt; c.name) };</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const labels = [], annualData = {};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>let firstMonthName = "", firstYear = "", lastMonthName = "", lastYear = "";</p>
+<p class="p1"><span class="Apple-converted-space">            </span>for(let i=0; i&lt;12; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const d = new Date(startYear, startMonth + i, 1);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const key = `${d.getFullYear()}-${d.getMonth()}`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>labels.push(`${monthsShort[d.getMonth()]} ${d.getFullYear().toString().slice(-2)}`);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (i === 0) { firstMonthName = MONTH_NAMES[d.getMonth()]; firstYear = d.getFullYear(); }</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (i === 11) { lastMonthName = MONTH_NAMES[d.getMonth()]; lastYear = d.getFullYear(); }</p>
+<p class="p1"><span class="Apple-converted-space">                </span>annualData[key] = { income: 0, expense: 0, cashflow: 0, incomeCats: {}, expenseCats: {} };</p>
+<p class="p1"><span class="Apple-converted-space">                </span>cats.pemasukan.forEach(c =&gt; annualData[key].incomeCats[c] = 0);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>cats.pengeluaran.forEach(c =&gt; annualData[key].expenseCats[c] = 0);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>annualReportInfoPdf.innerHTML = `&lt;h3 class="text-xl font-semibold mb-4"&gt;Periode: ${firstMonthName} ${firstYear} - ${lastMonthName} ${lastYear}&lt;/h3&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>annualReportInfoPdf.style.display = 'none';</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>allTransactions.forEach(tx =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const d = new Date(tx.date);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const key = `${d.getFullYear()}-${d.getMonth()}`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if(annualData[key]) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if(tx.type === 'pemasukan') {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>annualData[key].income += tx.amount;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if(annualData[key].incomeCats[tx.category] !== undefined) annualData[key].incomeCats[tx.category] += tx.amount;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>annualData[key].expense += tx.amount;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if(annualData[key].expenseCats[tx.category] !== undefined) annualData[key].expenseCats[tx.category] += tx.amount;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>annualData[key].cashflow = annualData[key].income - annualData[key].expense;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const keys = Object.keys(annualData);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const incomes = keys.map(k =&gt; annualData[k].income);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const expenses = keys.map(k =&gt; annualData[k].expense);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const cashflowValues = keys.map(k =&gt; annualData[k].cashflow);</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Charts</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const destroyChart = (cid) =&gt; { if(charts[cid]) charts[cid].destroy(); };</p>
+<p class="p1"><span class="Apple-converted-space">            </span>destroyChart('annual-income');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>charts['annual-income'] = new Chart(document.getElementById('annual-income-chart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Pemasukan', data: incomes, backgroundColor: '#22c55e' }] } });</p>
+<p class="p1"><span class="Apple-converted-space">            </span>destroyChart('annual-expense');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>charts['annual-expense'] = new Chart(document.getElementById('annual-expense-chart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Pengeluaran', data: expenses, backgroundColor: '#ef4444' }] } });</p>
+<p class="p1"><span class="Apple-converted-space">            </span>destroyChart('annual-cashflow');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>charts['annual-cashflow'] = new Chart(document.getElementById('annual-cashflow-chart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Arus Kas', data: cashflowValues, backgroundColor: cashflowValues.map(v =&gt; v &gt;= 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)'), borderColor: cashflowValues.map(v =&gt; v &gt;= 0 ? '#22c55e' : '#ef4444'), borderWidth: 1 }] } });</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Tables</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const renderTable = (headerId, bodyId, type, catList) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById(headerId).innerHTML = `&lt;th class="p-2 annual-table-category"&gt;Kategori&lt;/th&gt;` + labels.map(l =&gt; `&lt;th class="p-2 text-right"&gt;${l}&lt;/th&gt;`).join('') + `&lt;th class="p-2 text-right"&gt;Total&lt;/th&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>let bodyHtml = '';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>catList.sort().forEach(c =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>let row = `&lt;tr&gt;&lt;td class="p-2 annual-table-category"&gt;${c}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>let total = 0;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>keys.forEach(k =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const val = type === 'income' ? annualData[k].incomeCats[c] : annualData[k].expenseCats[c];</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>row += `&lt;td class="p-2 text-right"&gt;${formatCurrency(val)}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>total += val;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>row += `&lt;td class="p-2 text-right font-bold"&gt;${formatCurrency(total)}&lt;/td&gt;&lt;/tr&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>bodyHtml += row;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById(bodyId).innerHTML = bodyHtml;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderTable('annual-income-header', 'annual-income-body', 'income', cats.pemasukan);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>renderTable('annual-expense-header', 'annual-expense-body', 'expense', cats.pengeluaran);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>function renderAnomalyReport() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// ... (Simple check logic)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>anomalyList.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const exps = allTransactions.filter(t =&gt; t.type === 'pengeluaran').sort((a,b) =&gt; new Date(a.date) - new Date(b.date));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const anomalies = [];</p>
+<p class="p1"><span class="Apple-converted-space">            </span>exps.forEach(tx =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const txDate = new Date(tx.date).getTime();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const history = exps.filter(h =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const hDate = new Date(h.date).getTime();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return h.category === tx.category &amp;&amp; hDate &lt; txDate &amp;&amp; hDate &gt;= (txDate - 90*24*3600*1000);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>});</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if(history.length &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const avg = history.reduce((sum, h) =&gt; sum + h.amount, 0) / history.length;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if(tx.amount &gt;= avg * 3 &amp;&amp; (tx.amount - avg) &gt;= 100000) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>anomalies.push({...tx, avg});</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if(anomalies.length === 0) anomalyList.innerHTML = '&lt;tr&gt;&lt;td colspan="5" class="p-4 text-center"&gt;Tidak ada anomali.&lt;/td&gt;&lt;/tr&gt;';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>else anomalies.forEach(a =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>anomalyList.innerHTML += `&lt;tr&gt;&lt;td class="p-2"&gt;${new Date(a.date).toLocaleDateString('id-ID')}&lt;/td&gt;&lt;td class="p-2"&gt;${a.category}&lt;/td&gt;&lt;td class="p-2"&gt;${a.description}&lt;/td&gt;&lt;td class="p-2 text-right font-bold text-red-600"&gt;${formatCurrency(a.amount)}&lt;/td&gt;&lt;td class="p-2 text-right"&gt;${formatCurrency(a.avg)}&lt;/td&gt;&lt;/tr&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function handleFormSubmit(e) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const tx = { date: dateInput.value, type: typeSelect.value, category: categorySelect.value, amount: parseFloat(amountInput.value), description: descriptionInput.value, user_id: userId };</p>
+<p class="p1"><span class="Apple-converted-space">            </span>await db.from('transactions').insert(tx);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>formStatus.textContent = 'Tersimpan!';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transactionForm.reset();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>dateInput.valueAsDate = new Date();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>updateCategoryOptions();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>loadTransactions();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>setTimeout(() =&gt; formStatus.textContent = '', 2000);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- GLOBAL EXPORTS ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>window.openCategoryModal = (mode, id) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>categoryModalForm.reset(); categoryModalId.value = id;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if(mode === 'edit') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const c = [...categoriesData.pemasukan, ...categoriesData.pengeluaran].find(x =&gt; x.id == id);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if(c) { document.getElementById('category-modal-name').value = c.name; document.getElementById('category-modal-type').value = c.type; }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>showModal(categoryModal);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p1"><span class="Apple-converted-space">        </span>window.openDeleteModal = (id) =&gt; { deleteModalId.value = id; showModal(deleteModal); };</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// --- INIT ---</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.addEventListener('DOMContentLoaded', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>dateInput.valueAsDate = new Date();</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>loginForm.addEventListener('submit', async (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if(document.getElementById('password').value === 'alfinrho$') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>loginOverlay.classList.add('hidden');<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>mainAppContent.classList.remove('hidden');</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>// --- PERBAIKAN SAFETY CHECK ---</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const { data: { user } } = await db.auth.getUser();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>let currentUser = user;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (!currentUser) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>// Coba daftar user baru random jika belum ada sesi</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const randomEmail = `user${Date.now()}@demo.com`;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const { data: signUpData, error: signUpError } = await db.auth.signUp({</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>email: randomEmail,</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>password: 'password123' // Password lebih kuat</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>});</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (signUpError) {</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>console.error("SignUp Error:", signUpError);</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>alert("Gagal mendaftar otomatis ke Supabase: " + signUpError.message);</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>// Setelah signup, coba ambil user lagi</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>currentUser = signUpData.user;</p>
+<p class="p2"><span class="Apple-converted-space">                        </span></p>
+<p class="p1"><span class="Apple-converted-space">                        </span>// Jika masih null, mungkin karena butuh verifikasi email</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>if (!currentUser) {</p>
+<p class="p1"><span class="Apple-converted-space">                             </span>const { data: refetched } = await db.auth.getUser();</p>
+<p class="p1"><span class="Apple-converted-space">                             </span>currentUser = refetched.user;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>// Jika SANGAT gagal (Email confirm nyala), beri peringatan, JANGAN crash</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (!currentUser) {</p>
+<p class="p1"><span class="Apple-converted-space">                         </span>alert("Gagal login otomatis. Kemungkinan 'Confirm Email' menyala di Supabase Anda. Mohon matikan di Authentication -&gt; Providers -&gt; Email, atau cek console log.");</p>
+<p class="p1"><span class="Apple-converted-space">                         </span>return;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>userId = currentUser.id;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>userIdDisplay.textContent = "ID: " + userId;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await loadCategories(); await loadTransactions();</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>initFilters();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>loginError.classList.remove('hidden');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>transactionForm.addEventListener('submit', handleFormSubmit);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>typeSelect.addEventListener('change', updateCategoryOptions);</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>navLinks.forEach(l =&gt; l.addEventListener('click', e =&gt; { e.preventDefault(); views.forEach(v =&gt; v.classList.add('hidden')); document.getElementById(l.dataset.view).classList.remove('hidden'); if(l.dataset.view==='view-laporan-bulanan') renderMonthlyReport(); if(l.dataset.view==='view-laporan-tahunan') renderAnnualReport(); if(l.dataset.view==='view-transaksi-anomali') renderAnomalyReport(); }));</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>addCategoryBtn.addEventListener('click', () =&gt; window.openCategoryModal('add'));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>categoryModalForm.addEventListener('submit', async e =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const d = { name: document.getElementById('category-modal-name').value, type: document.getElementById('category-modal-type').value, user_id: userId };</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if(categoryModalId.value) await db.from('categories').update(d).eq('id', categoryModalId.value);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>else await db.from('categories').insert(d);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>hideModal(categoryModal); loadCategories();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('delete-modal-confirm').addEventListener('click', async () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if(document.getElementById('delete-modal-password').value === 'alfinrho$') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>await db.from('categories').delete().eq('id', deleteModalId.value);</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>hideModal(deleteModal); loadCategories();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>[categoryModalCancel, deleteModalCancel].forEach(b =&gt; b.addEventListener('click', () =&gt; { hideModal(categoryModal); hideModal(deleteModal); }));</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>downloadMonthlyPdfBtn.addEventListener('click', downloadMonthlyReportAsPDF);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>downloadAnnualPdfBtn.addEventListener('click', downloadAnnualReportAsPDF);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>openExcelModalBtn.addEventListener('click', openExcelDownloadModal);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>excelDownloadCancelBtn.addEventListener('click', () =&gt; hideModal(excelDownloadModal));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>excelDownloadConfirmBtn.addEventListener('click', downloadTransactionsAsExcel);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
