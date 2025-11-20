@@ -1,29 +1,1085 @@
 <!DOCTYPE html>
-
 <html lang="id" class="h-full bg-gray-100">
 
-
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Pencatat Keuangan Pribadi</title>
-
     <!-- Memuat Tailwind CSS -->
-
     <script src="https://cdn.tailwindcss.com"></script>
-
     <!-- Memuat Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Library untuk PDF & Excel (Versi Stabil) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-…            excelDownloadConfirmBtn.addEventListener('click', downloadTransactionsAsExcel);
+    <!-- Memuat Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* Menggunakan font Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+        html {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Menyembunyikan panah di input number */
+        input[type='number']::-webkit-outer-spin-button,
+        input[type='number']::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type='number'] {
+            -moz-appearance: textfield;
+        }
+        
+        /* CSS KHUSUS UNTUK PDF (dipicu oleh JS) */
+        body.is-printing-pdf .printable-area {
+            font-size: 10px;
+        }
+        body.is-printing-pdf .printable-area h2 {
+            font-size: 1.25rem;
+            line-height: 1.75rem;
+        }
+        body.is-printing-pdf .printable-area h3 {
+            font-size: 1rem;
+            line-height: 1.5rem;
+        }
+        body.is-printing-pdf .printable-area .annual-table-category {
+            width: 15% !important;
+            word-break: break-word !important;
+            white-space: normal !important;
+        }
+        body.is-printing-pdf .printable-area th,
+        body.is-printing-pdf .printable-area td {
+            padding: 4px 6px !important;
+            font-size: 8px !important;
+        }
+        body.is-printing-pdf .no-print {
+            display: none !important;
+        }
+        body.is-printing-pdf .printable-area h2.pdf-hidden {
+             display: none !important;
+        }
+         body.is-printing-pdf .printable-area h2.pdf-visible {
+             display: block !important;
+        }
+        /* Banner Demo Mode */
+        #demo-banner {
+            background-color: #FFF7ED;
+            color: #C05621;
+            border-bottom: 1px solid #FED7D7;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body class="h-full bg-gray-100">
+    <!-- Latar belakang gelap untuk modal -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden no-print"></div>
+
+    <!-- 1. Overlay Login -->
+    <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 p-4 no-print">
+        <div class="w-full max-w-sm p-8 bg-white rounded-2xl shadow-xl">
+            <h2 class="text-3xl font-bold text-center text-gray-800">Hai Alfin Rho</h2>
+            <p class="mt-2 text-center text-gray-500">Masukkan password untuk update transaksi keuanganmu</p>
+            <form id="login-form" class="mt-8 space-y-6">
+                <div>
+                    <label for="password" class="sr-only">Password</label>
+                    <input id="password" name="password" type="password" required
+                        class="w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Password">
+                </div>
+                <p id="login-error" class="text-sm text-red-600 text-center hidden">Password salah. Coba lagi.</p>
+                <button type="submit"
+                    class="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Konten Aplikasi Utama (Awalnya Tersembunyi) -->
+    <div id="main-app-content" class="hidden h-full flex flex-col">
+        
+        <!-- Banner Demo Mode -->
+        <div id="demo-banner" class="hidden no-print">
+            Mode Demo: Data disimpan sementara di browser. Cek koneksi Supabase Anda.
+        </div>
+
+        <!-- Header / Navigasi Atas -->
+        <header class="bg-white shadow-md w-full p-4 flex justify-between items-center z-10 sticky top-0 no-print">
+            <div class="flex items-baseline space-x-6">
+                <h1 class="text-2xl font-bold text-blue-700">Keuanganku</h1>
+                <!-- Menu Navigasi -->
+                <nav>
+                    <ul class="flex space-x-1">
+                        <li>
+                            <a href="#" data-view="view-beranda" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">
+                                Beranda
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-view="view-laporan-bulanan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">
+                                Laporan Bulanan
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-view="view-laporan-tahunan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">
+                                Laporan Tahunan
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-view="view-transaksi-anomali" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">
+                                Transaksi Anomali
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-view="view-master-setting" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">
+                                Master Setting
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            <span id="user-id-display" class="text-xs text-gray-400 truncate" title="User ID"></span>
+        </header>
+
+        <!-- Konten Utama (Views) -->
+        <main class="flex-1 overflow-y-auto p-8">
+
+            <!-- Tampilan 1: Beranda -->
+            <div id="view-beranda" class="view-content grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Kolom Kiri & Tengah -->
+                <div class="lg:col-span-2 space-y-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-xl font-semibold mb-5">Summary (Bulan Ini)</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+                                <div class="text-sm font-medium text-green-600">Pemasukan</div>
+                                <div id="summary-income" class="text-2xl font-bold text-green-800 mt-1">IDR 0</div>
+                            </div>
+                            <div class="bg-red-50 p-5 rounded-xl border border-red-200">
+                                <div class="text-sm font-medium text-red-600">Pengeluaran</div>
+                                <div id="summary-expense" class="text-2xl font-bold text-red-800 mt-1">IDR 0</div>
+                            </div>
+                            <div class="bg-blue-50 p-5 rounded-xl border border-blue-200">
+                                <div class="text-sm font-medium text-blue-600">Saldo</div>
+                                <div id="summary-balance" class="text-2xl font-bold text-blue-800 mt-1">IDR 0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <div class="flex justify-between items-center mb-5">
+                            <h2 class="text-xl font-semibold">Riwayat Transaksi (Bulan Ini)</h2>
+                            <button id="open-excel-modal"
+                                class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-green-600 hover:bg-green-700 transition-colors no-print">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 9.293a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                                <span>Download Excel</span>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transaction-list" class="bg-white divide-y divide-gray-200">
+                                    <tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Belum ada transaksi bulan ini.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan (Form) -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg sticky top-24 no-print">
+                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Tambah Transaksi</h2>
+                            <form id="transaction-form" class="space-y-4">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="date" class="block text-sm font-medium text-gray-700">Tanggal</label>
+                                        <input type="date" id="date" name="date" required
+                                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="type" class="block text-sm font-medium text-gray-700">Jenis</label>
+                                        <select id="type" name="type" required
+                                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                            <option value="pengeluaran">Pengeluaran</option>
+                                            <option value="pemasukan">Pemasukan</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="category" class="block text-sm font-medium text-gray-700">Kategori</label>
+                                        <select id="category" name="category" required
+                                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                            disabled>
+                                            <option value="">Pilih jenis dulu...</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="amount" class="block text-sm font-medium text-gray-700">Jumlah (IDR)</label>
+                                        <input type="number" id="amount" name="amount" required min="0" placeholder="50000"
+                                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label for="description" class="block text-sm font-medium text-gray-700">Keterangan</label>
+                                        <textarea id="description" name="description" rows="2" placeholder="Cth: Kopi susu"
+                                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                                    </div>
+                                    <button type="submit"
+                                        class="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                                        Simpan Transaksi
+                                    </button>
+                                    <p id="form-status" class="text-sm text-green-600 text-center mt-2"></p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tampilan 2: Laporan Bulanan -->
+            <div id="view-laporan-bulanan" class="view-content hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-lg printable-area">
+                    <div class="flex justify-between items-center mb-4 no-print">
+                        <h2 class="text-2xl font-bold pdf-hidden">Laporan Bulanan</h2>
+                        <button id="download-monthly-pdf"
+                            class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 9.293a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            <span>Download PDF</span>
+                        </button>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-4 hidden pdf-visible">Laporan Bulanan</h2>
+                    
+                    <div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print">
+                        <div>
+                            <label for="monthly-report-month" class="block text-sm font-medium text-gray-700">Bulan</label>
+                            <select id="monthly-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                        </div>
+                        <div>
+                            <label for="monthly-report-year" class="block text-sm font-medium text-gray-700">Tahun</label>
+                            <select id="monthly-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                        </div>
+                    </div>
+                    
+                    <div id="monthly-report-info-pdf" class="mb-4 hidden pdf-visible"></div>
+
+                    <div id="monthly-report-summary" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+                            <div class="text-sm font-medium text-green-600">Total Pemasukan</div>
+                            <div id="monthly-report-income" class="text-2xl font-bold text-green-800 mt-1">IDR 0</div>
+                        </div>
+                        <div class="bg-red-50 p-5 rounded-xl border border-red-200">
+                            <div class="text-sm font-medium text-red-600">Total Pengeluaran</div>
+                            <div id="monthly-report-expense" class="text-2xl font-bold text-red-800 mt-1">IDR 0</div>
+                        </div>
+                        <div class="bg-blue-50 p-5 rounded-xl border border-blue-200">
+                            <div class="text-sm font-medium text-blue-600">Arus Kas</div>
+                            <div id="monthly-report-cashflow" class="text-2xl font-bold text-blue-800 mt-1">IDR 0</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200">
+                            <h3 class="text-lg font-semibold mb-3">Arus Kas</h3>
+                            <canvas id="monthly-cashflow-chart"></canvas>
+                        </div>
+                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200">
+                            <h3 class="text-lg font-semibold mb-3">Pemasukan</h3>
+                            <canvas id="monthly-income-chart"></canvas>
+                        </div>
+                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200">
+                            <h3 class="text-lg font-semibold mb-3">Pengeluaran</h3>
+                            <canvas id="monthly-expense-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-green-700">Rincian Pemasukan</h3>
+                            <div id="monthly-income-table" class="max-h-96 overflow-y-auto"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-red-700">Rincian Pengeluaran</h3>
+                            <div id="monthly-expense-table" class="max-h-96 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tampilan 3: Laporan Tahunan -->
+            <div id="view-laporan-tahunan" class="view-content hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-lg printable-area">
+                    <div class="flex justify-between items-center mb-4 no-print">
+                        <h2 class="text-2xl font-bold pdf-hidden">Laporan Pemasukan & Pengeluaran Tahunan</h2>
+                        <button id="download-annual-pdf"
+                            class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 9.293a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            <span>Download PDF</span>
+                        </button>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-4 hidden pdf-visible">Laporan Pemasukan & Pengeluaran Tahunan</h2>
+                    
+                    <div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print">
+                        <div>
+                            <label for="annual-report-month" class="block text-sm font-medium text-gray-700">Mulai Bulan</label>
+                            <select id="annual-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                        </div>
+                        <div>
+                            <label for="annual-report-year" class="block text-sm font-medium text-gray-700">Mulai Tahun</label>
+                            <select id="annual-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                        </div>
+                    </div>
+                    
+                    <div id="annual-report-info-pdf" class="mb-4 hidden pdf-visible"></div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="p-5 rounded-xl border border-gray-200">
+                            <h3 class="text-lg font-semibold mb-3 text-center">Pemasukan 12 Bulan</h3>
+                            <canvas id="annual-income-chart" height="200"></canvas>
+                        </div>
+                        <div class="p-5 rounded-xl border border-gray-200">
+                            <h3 class="text-lg font-semibold mb-3 text-center">Pengeluaran 12 Bulan</h3>
+                            <canvas id="annual-expense-chart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-xl border border-gray-200 mb-8">
+                        <h3 class="text-lg font-semibold mb-3 text-center">Arus Kas (Cash Flow) 12 Bulan</h3>
+                        <canvas id="annual-cashflow-chart" height="150"></canvas>
+                    </div>
+
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-3 text-blue-700">Overview</h3>
+                            <div class="overflow-x-auto shadow rounded-lg">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-blue-600 text-white">
+                                        <tr id="annual-overview-header"></tr>
+                                    </thead>
+                                    <tbody id="annual-overview-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-3 text-green-700">Pemasukan Bulanan</h3>
+                            <div class="overflow-x-auto shadow rounded-lg">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-green-600 text-white">
+                                        <tr id="annual-income-header"></tr>
+                                    </thead>
+                                    <tbody id="annual-income-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-3 text-red-700">Pengeluaran Bulanan</h3>
+                            <div class="overflow-x-auto shadow rounded-lg">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-red-600 text-white">
+                                        <tr id="annual-expense-header"></tr>
+                                    </thead>
+                                    <tbody id="annual-expense-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tampilan 4: Transaksi Anomali -->
+            <div id="view-transaksi-anomali" class="view-content hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold mb-4">Deteksi Transaksi Anomali (Pengeluaran)</h2>
+                    <p class="text-gray-600 mb-6 pb-6 border-b border-gray-200">
+                        Menampilkan transaksi pengeluaran yang nilainya <strong>3x lebih besar</strong> DAN 
+                        <strong>minimal 100.000 IDR</strong> di atas rata-rata 90 hari sebelumnya untuk kategori yang sama.
+                    </p>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah (IDR)</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Rata-rata (90 Hari)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="anomaly-list" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Menganalisis data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tampilan 5: Master Setting -->
+            <div id="view-master-setting" class="view-content hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <div class="flex justify-between items-center mb-6 no-print">
+                        <h2 class="text-2xl font-bold">Master Kategori</h2>
+                        <button id="add-category-btn"
+                            class="py-2 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 transition-colors">
+                            + Tambah Kategori
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="text-lg font-semibold text-green-700 mb-3 pb-3 border-b border-gray-200">Kategori Pemasukan</h3>
+                            <ul id="master-pemasukan-list" class="divide-y divide-gray-200">
+                                <li class="py-2 text-gray-500">Memuat...</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-red-700 mb-3 pb-3 border-b border-gray-200">Kategori Pengeluaran</h3>
+                            <ul id="master-pengeluaran-list" class="divide-y divide-gray-200">
+                                <li class="py-2 text-gray-500">Memuat...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 3. Modals -->
+    <div id="status-modal" class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-xl transition-all translate-y-16 opacity-0 hidden no-print" role="alert"><p id="status-message">Status message</p></div>
+    <div id="category-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 id="category-modal-title" class="text-xl font-semibold mb-6">Tambah Kategori Baru</h3><form id="category-modal-form"><input type="hidden" id="category-modal-id"><div class="space-y-4"><div><label for="category-modal-name" class="block text-sm font-medium text-gray-700">Nama Kategori</label><input type="text" id="category-modal-name" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></div><div><label for="category-modal-type" class="block text-sm font-medium text-gray-700">Jenis</label><select id="category-modal-type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"><option value="pemasukan">Pemasukan</option><option value="pengeluaran">Pengeluaran</option></select></div><div><label for="category-modal-note" class="block text-sm font-medium text-gray-700">Keterangan (Opsional)</label><textarea id="category-modal-note" rows="2" placeholder="Cth: Untuk Gaji dan Bonus" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea></div></div><div class="flex justify-end space-x-3 mt-8"><button type="button" id="category-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium">Batal</button><button type="button" id="category-modal-cancel-submit" class="hidden">Submit</button><button type="submit" class="py-2 px-4 rounded-lg text-white bg-blue-600 hover:bg-blue-700 font-medium">Simpan</button></div></form></div></div>
+    <div id="excel-download-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 class="text-xl font-semibold mb-6">Download Riwayat Transaksi</h3><p class="text-sm text-gray-600 mb-4">Pilih periode transaksi yang ingin di-download sebagai file Excel.</p><div class="space-y-4"><div><label for="excel-month-select" class="block text-sm font-medium text-gray-700">Bulan</label><select id="excel-month-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select></div><div><label for="excel-year-select" class="block text-sm font-medium text-gray-700">Tahun</label><select id="excel-year-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select></div></div><div class="flex justify-end space-x-3 mt-8"><button type="button" id="excel-download-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium">Batal</button><button type="button" id="download-excel-confirm" class="py-2 px-4 rounded-lg text-white bg-green-600 hover:bg-green-700 font-medium">Download</button></div></div></div>
+    <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 class="text-xl font-semibold mb-4">Verifikasi Hapus</h3><p class="text-gray-600 mb-4">Untuk menghapus kategori ini, masukkan password Anda:</p><input type="hidden" id="delete-modal-id"><input type="password" id="delete-modal-password" placeholder="Password" class="w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"><p id="delete-modal-error" class="text-sm text-red-600 mt-2 hidden">Password salah.</p><div class="flex justify-end space-x-3 mt-6"><button type="button" id="delete-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium">Batal</button><button type="button" id="delete-modal-confirm" class="py-2 px-4 rounded-lg text-white bg-red-600 hover:bg-red-700 font-medium">Hapus</button></div></div></div>
+    <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 class="text-xl font-semibold mb-4">Konfirmasi</h3><p id="confirm-modal-text" class="text-gray-600 mb-6">Apakah Anda yakin ingin menyimpan perubahan ini?</p><div class="flex justify-end space-x-3"><button type="button" id="confirm-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium">Batal</button><button type="button" id="confirm-modal-confirm" class="py-2 px-4 rounded-lg text-white bg-blue-600 hover:bg-blue-700 font-medium">Yakin</button></div></div></div>
+
+    <!-- SUPABASE SCRIPT (Pengganti Firebase) -->
+    <script type="module">
+        // --- KONFIGURASI SUPABASE ---
+        const SUPABASE_URL = 'https://azgkrncmbalimhwickmm.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_0JKn3axQn0QEqSGsgtCg1Q_Bi-QCYM2';
+
+        const { jsPDF } = window.jspdf;
+        const { createClient } = supabase;
+        
+        // --- MOCK DB (Untuk Preview) ---
+        class MockClient {
+            constructor() {
+                this.auth = {
+                    getUser: async () => ({ data: { user: { id: 'mock-user-id' } }, error: null }),
+                    getSession: async () => ({ data: { session: { user: { id: 'mock-user-id' } } }, error: null }),
+                    signUp: async () => ({ data: { user: { id: 'mock-user-id' } }, error: null }),
+                };
+            }
+            channel() { return { on: () => ({ on: () => ({ on: () => ({ on: () => ({ subscribe: () => {} }) }) }) }) }; }
+            from(table) {
+                const key = `mock_${table}`;
+                return {
+                    select: (cols) => ({
+                        eq: async (col, val) => {
+                            let data = JSON.parse(localStorage.getItem(key) || '[]');
+                            if (col === 'user_id') data = data.filter(d => d.user_id === val);
+                            return { data, error: null };
+                        }
+                    }),
+                    insert: async (data) => {
+                        let current = JSON.parse(localStorage.getItem(key) || '[]');
+                        const rows = Array.isArray(data) ? data : [data];
+                        rows.forEach(r => { if(!r.id) r.id = Date.now() + Math.random(); current.push(r); });
+                        localStorage.setItem(key, JSON.stringify(current));
+                        return { error: null };
+                    },
+                    update: (data) => ({
+                        eq: (col, val) => ({
+                            eq: async (col2, val2) => {
+                                let current = JSON.parse(localStorage.getItem(key) || '[]');
+                                current = current.map(r => (r[col] == val && r[col2] == val2) ? {...r, ...data} : r);
+                                localStorage.setItem(key, JSON.stringify(current));
+                                return { error: null };
+                            }
+                        })
+                    }),
+                    delete: () => ({
+                        eq: (col, val) => ({
+                            eq: async (col2, val2) => {
+                                let current = JSON.parse(localStorage.getItem(key) || '[]');
+                                current = current.filter(r => !(r[col] == val && r[col2] == val2));
+                                localStorage.setItem(key, JSON.stringify(current));
+                                return { error: null };
+                            }
+                        })
+                    })
+                };
+            }
+        }
+
+        let db;
+        if (SUPABASE_URL.includes("URL_PROYEK_ANDA")) {
+             console.warn("Konfigurasi Supabase belum diset. Beralih ke Mode Demo.");
+             db = new MockClient();
+             document.getElementById('demo-banner').classList.remove('hidden');
+        } else {
+             db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true } });
+        }
+
+        let userId; 
+        let categoriesData = { pemasukan: [], pengeluaran: [] };
+        let allTransactions = []; 
+        let currentMonthTransactions = []; 
+        let charts = {}; 
+        let confirmAction = null;
+        const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        // Elemen UI (Didefinisikan di level modul agar bisa diakses semua fungsi)
+        const loginOverlay = document.getElementById('login-overlay');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const mainAppContent = document.getElementById('main-app-content');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const transactionForm = document.getElementById('transaction-form');
+        const typeSelect = document.getElementById('type');
+        const categorySelect = document.getElementById('category');
+        const dateInput = document.getElementById('date');
+        const amountInput = document.getElementById('amount');
+        const descriptionInput = document.getElementById('description');
+        const formStatus = document.getElementById('form-status');
+        const summaryIncome = document.getElementById('summary-income');
+        const summaryExpense = document.getElementById('summary-expense');
+        const summaryBalance = document.getElementById('summary-balance');
+        const transactionList = document.getElementById('transaction-list');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const views = document.querySelectorAll('.view-content');
+        const masterPemasukanList = document.getElementById('master-pemasukan-list');
+        const masterPengeluaranList = document.getElementById('master-pengeluaran-list');
+        const addCategoryBtn = document.getElementById('add-category-btn');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const statusModal = document.getElementById('status-modal');
+        const statusMessage = document.getElementById('status-message');
+        const categoryModal = document.getElementById('category-modal');
+        const categoryModalForm = document.getElementById('category-modal-form');
+        const categoryModalTitle = document.getElementById('category-modal-title');
+        const categoryModalId = document.getElementById('category-modal-id');
+        const categoryModalName = document.getElementById('category-modal-name');
+        const categoryModalType = document.getElementById('category-modal-type');
+        const categoryModalNote = document.getElementById('category-modal-note');
+        const categoryModalCancel = document.getElementById('category-modal-cancel');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteModalId = document.getElementById('delete-modal-id');
+        const deleteModalPassword = document.getElementById('delete-modal-password');
+        const deleteModalError = document.getElementById('delete-modal-error');
+        const deleteModalCancel = document.getElementById('delete-modal-cancel');
+        const deleteModalConfirm = document.getElementById('delete-modal-confirm');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmModalText = document.getElementById('confirm-modal-text');
+        const confirmModalCancel = document.getElementById('confirm-modal-cancel');
+        const confirmModalConfirm = document.getElementById('confirm-modal-confirm');
+        const openExcelModalBtn = document.getElementById('open-excel-modal');
+        const excelDownloadModal = document.getElementById('excel-download-modal');
+        const excelMonthSelect = document.getElementById('excel-month-select');
+        const excelYearSelect = document.getElementById('excel-year-select');
+        const excelDownloadCancelBtn = document.getElementById('excel-download-cancel');
+        const excelDownloadConfirmBtn = document.getElementById('download-excel-confirm');
+        const downloadMonthlyPdfBtn = document.getElementById('download-monthly-pdf');
+        const downloadAnnualPdfBtn = document.getElementById('download-annual-pdf');
+        const monthlyReportMonthSelect = document.getElementById('monthly-report-month');
+        const monthlyReportYearSelect = document.getElementById('monthly-report-year');
+        const monthlyReportInfoPdf = document.getElementById('monthly-report-info-pdf');
+        const monthlyReportIncome = document.getElementById('monthly-report-income');
+        const monthlyReportExpense = document.getElementById('monthly-report-expense');
+        const monthlyReportCashflow = document.getElementById('monthly-report-cashflow');
+        const monthlyIncomeTable = document.getElementById('monthly-income-table');
+        const monthlyExpenseTable = document.getElementById('monthly-expense-table');
+        const annualReportMonthSelect = document.getElementById('annual-report-month');
+        const annualReportYearSelect = document.getElementById('annual-report-year');
+        const annualReportInfoPdf = document.getElementById('annual-report-info-pdf');
+        const anomalyList = document.getElementById('anomaly-list');
+
+        // --- FUNGSI ---
+
+        function showStatus(message, isError = false, duration = 3000) {
+            statusMessage.textContent = message;
+            statusModal.classList.remove('hidden', 'bg-gray-800', 'bg-red-600', 'translate-y-16', 'opacity-0');
+            statusModal.classList.add(isError ? 'bg-red-600' : 'bg-gray-800', 'translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                statusModal.classList.add('translate-y-16', 'opacity-0');
+                statusModal.classList.remove('translate-y-0', 'opacity-100');
+                setTimeout(() => statusModal.classList.add('hidden'), 300);
+            }, duration);
+        }
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+        }
+        function showModal(el) { modalBackdrop.classList.remove('hidden'); el.classList.remove('hidden'); }
+        function hideModal(el) { modalBackdrop.classList.add('hidden'); el.classList.add('hidden'); }
+
+        async function downloadElementAsPDF(elementToCapture, filename) {
+            showStatus("Mempersiapkan PDF...", false, 5000);
+            document.body.classList.add('is-printing-pdf');
+            try {
+                const canvas = await html2canvas(elementToCapture, {
+                    scale: 2, useCORS: true, logging: false,
+                    onclone: (doc) => {
+                        doc.querySelectorAll('.no-print').forEach(el => el.style.display = 'none');
+                        doc.querySelectorAll('.printable-area h2.pdf-visible').forEach(el => el.style.display = 'block');
+                        doc.querySelectorAll('.printable-area .pdf-visible').forEach(el => el.style.display = 'block');
+                    }
+                });
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                const pdf = new jsPDF('l', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const margin = 5; 
+                const usableWidth = pdfWidth - (margin * 2);
+                const ratio = imgWidth / usableWidth;
+                const scaledImgHeight = imgHeight / ratio;
+                let heightLeft = scaledImgHeight;
+                let position = margin;
+                pdf.addImage(imgData, 'PNG', margin, position, usableWidth, scaledImgHeight);
+                heightLeft -= (pdfHeight - (margin * 2));
+                while (heightLeft > 0) {
+                    position = heightLeft - scaledImgHeight + margin;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', margin, position, usableWidth, scaledImgHeight);
+                    heightLeft -= (pdfHeight - (margin * 2));
+                }
+                pdf.save(filename);
+                showStatus("PDF berhasil di-download.");
+            } catch (error) {
+                console.error("Gagal membuat PDF:", error);
+                showStatus("Gagal membuat PDF. Coba lagi.", true);
+            } finally {
+                document.body.classList.remove('is-printing-pdf');
+            }
+        }
+
+        async function downloadMonthlyReportAsPDF() {
+            const month = monthlyReportMonthSelect.options[monthlyReportMonthSelect.selectedIndex].text;
+            const year = monthlyReportYearSelect.value;
+            const filename = `Laporan_Bulanan_${month}_${year}.pdf`;
+            const element = document.getElementById('view-laporan-bulanan').querySelector('.printable-area');
+            await downloadElementAsPDF(element, filename);
+        }
+        async function downloadAnnualReportAsPDF() {
+            const month = annualReportMonthSelect.options[annualReportMonthSelect.selectedIndex].text;
+            const year = annualReportYearSelect.value;
+            const filename = `Laporan_Tahunan_${month}_${year}.pdf`;
+            const element = document.getElementById('view-laporan-tahunan').querySelector('.printable-area');
+            await downloadElementAsPDF(element, filename);
+        }
+        function openExcelDownloadModal() { showModal(excelDownloadModal); }
+        async function downloadTransactionsAsExcel() {
+            const selectedMonth = parseInt(excelMonthSelect.value);
+            const selectedYear = parseInt(excelYearSelect.value);
+            const monthName = excelMonthSelect.options[excelMonthSelect.selectedIndex].text;
+            const filteredTx = allTransactions.filter(tx => {
+                const txDate = new Date(tx.date);
+                return txDate.getMonth() === selectedMonth && txDate.getFullYear() === selectedYear;
+            });
+            if (filteredTx.length === 0) { showStatus("Tidak ada data transaksi untuk periode ini.", true); return; }
+            const dataForExcel = filteredTx.sort((a, b) => new Date(a.date) - new Date(b.date)).map(tx => ({
+                'Tanggal': new Date(tx.date).toLocaleDateString('id-ID'), 'Jenis': tx.type, 'Kategori': tx.category,
+                'Jumlah': tx.amount, 'Keterangan': tx.description || '-'
+            }));
+            const ws = XLSX.utils.json_to_sheet(dataForExcel);
+            ws['!cols'] = [{ wch: 12 }, { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 40 }];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `Transaksi ${monthName} ${selectedYear}`);
+            XLSX.writeFile(wb, `Riwayat_Transaksi_${monthName}_${selectedYear}.xlsx`);
+            hideModal(excelDownloadModal);
+            showStatus("Download Excel berhasil dimulai.");
+        }
+        
+        // FUNGSI INIT FILTERS (DEFINISIKAN SEBELUM DIPANGGIL)
+        function initFilters() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const years = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4]; 
+
+            monthlyReportMonthSelect.innerHTML = '';
+            annualReportMonthSelect.innerHTML = '';
+            excelMonthSelect.innerHTML = '';
+            MONTH_NAMES.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = month;
+                monthlyReportMonthSelect.appendChild(option.cloneNode(true));
+                annualReportMonthSelect.appendChild(option.cloneNode(true));
+                excelMonthSelect.appendChild(option);
+            });
+
+            monthlyReportYearSelect.innerHTML = '';
+            annualReportYearSelect.innerHTML = '';
+            excelYearSelect.innerHTML = '';
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                monthlyReportYearSelect.appendChild(option.cloneNode(true));
+                annualReportYearSelect.appendChild(option.cloneNode(true));
+                excelYearSelect.appendChild(option);
+            });
+
+            monthlyReportMonthSelect.value = currentMonth;
+            monthlyReportYearSelect.value = currentYear;
+            excelMonthSelect.value = currentMonth;
+            excelYearSelect.value = currentYear;
+            annualReportMonthSelect.value = 0; 
+            annualReportYearSelect.value = currentYear;
+
+            monthlyReportMonthSelect.addEventListener('change', renderMonthlyReport);
+            monthlyReportYearSelect.addEventListener('change', renderMonthlyReport);
+            annualReportMonthSelect.addEventListener('change', renderAnnualReport);
+            annualReportYearSelect.addEventListener('change', renderAnnualReport);
+        }
+
+        async function loadCategories() {
+            const { data, error } = await db.from('categories').select('*').eq('user_id', userId);
+            if (error) { console.error(error); return; }
+            categoriesData.pemasukan = data.filter(c => c.type === 'pemasukan');
+            categoriesData.pengeluaran = data.filter(c => c.type === 'pengeluaran');
+            if (data.length === 0) await initDefaultCategories();
+            else { updateCategoryOptions(); renderMasterSettings(); }
+        }
+        async function loadTransactions() {
+            const { data, error } = await db.from('transactions').select('*').eq('user_id', userId);
+            if (error) { console.error(error); return; }
+            allTransactions = data;
+            renderDashboard();
+        }
+        async function initDefaultCategories() {
+            const defaultCats = [
+                { name: "Gaji", type: "pemasukan", user_id: userId }, { name: "Bonus", type: "pemasukan", user_id: userId },
+                { name: "Makan", type: "pengeluaran", user_id: userId }, { name: "Transport", type: "pengeluaran", user_id: userId }
+            ];
+            await db.from('categories').insert(defaultCats);
+            await loadCategories();
+        }
+
+        function updateCategoryOptions() {
+            const selectedType = typeSelect.value;
+            const cats = categoriesData[selectedType] || [];
+            categorySelect.innerHTML = '';
+            cats.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.name;
+                opt.textContent = c.name;
+                categorySelect.appendChild(opt);
+            });
+            categorySelect.disabled = cats.length === 0;
+        }
+        function renderMasterSettings() {
+            masterPemasukanList.innerHTML = ''; masterPengeluaranList.innerHTML = '';
+            const renderList = (list, container) => {
+                list.forEach(cat => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between py-2';
+                    li.innerHTML = `<span>${cat.name}</span><div class="no-print"><button onclick="window.openCategoryModal('edit', ${cat.id})" class="text-blue-500 mr-2">Edit</button><button onclick="window.openDeleteModal(${cat.id})" class="text-red-500">Hapus</button></div>`;
+                    container.appendChild(li);
+                });
+            };
+            renderList(categoriesData.pemasukan, masterPemasukanList);
+            renderList(categoriesData.pengeluaran, masterPengeluaranList);
+        }
+        function renderDashboard() {
+            let inc = 0, exp = 0;
+            const now = new Date();
+            const curMonthTx = allTransactions.filter(t => {
+                const d = new Date(t.date);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            });
+            curMonthTx.sort((a,b) => new Date(b.date) - new Date(a.date));
+            transactionList.innerHTML = '';
+            curMonthTx.forEach(t => {
+                if(t.type === 'pemasukan') inc += t.amount; else exp += t.amount;
+                transactionList.innerHTML += `<tr class="${t.type === 'pemasukan' ? 'bg-green-50' : 'bg-red-50'}"><td class="px-4 py-2">${new Date(t.date).toLocaleDateString('id-ID')}</td><td class="px-4 py-2">${t.category}</td><td class="px-4 py-2">${t.description || '-'}</td><td class="px-4 py-2 text-right">${formatCurrency(t.amount)}</td></tr>`;
+            });
+            summaryIncome.textContent = formatCurrency(inc);
+            summaryExpense.textContent = formatCurrency(exp);
+            summaryBalance.textContent = formatCurrency(inc - exp);
+        }
+        
+        function renderMonthlyReport() {
+            const selectedMonth = parseInt(monthlyReportMonthSelect.value);
+            const selectedYear = parseInt(monthlyReportYearSelect.value);
+            const monthName = MONTH_NAMES[selectedMonth];
+            monthlyReportInfoPdf.innerHTML = `<h3 class="text-xl font-semibold mb-4">Periode: ${monthName} ${selectedYear}</h3>`;
+            monthlyReportInfoPdf.style.display = 'none';
+            let totalIncome = 0, totalExpense = 0;
+            const incomeByCategory = {}, expenseByCategory = {};
+            const filteredTx = allTransactions.filter(tx => {
+                const txDate = new Date(tx.date);
+                return txDate.getMonth() === selectedMonth && txDate.getFullYear() === selectedYear;
+            });
+            filteredTx.forEach(tx => {
+                if (tx.type === 'pemasukan') { totalIncome += tx.amount; incomeByCategory[tx.category] = (incomeByCategory[tx.category] || 0) + tx.amount; } 
+                else { totalExpense += tx.amount; expenseByCategory[tx.category] = (expenseByCategory[tx.category] || 0) + tx.amount; }
+            });
+            monthlyReportIncome.textContent = formatCurrency(totalIncome);
+            monthlyReportExpense.textContent = formatCurrency(totalExpense);
+            monthlyReportCashflow.textContent = formatCurrency(totalIncome - totalExpense);
+            
+            const destroyChart = (cid) => { if(charts[cid]) charts[cid].destroy(); };
+            destroyChart('cashflow');
+            charts['cashflow'] = new Chart(document.getElementById('monthly-cashflow-chart').getContext('2d'), { type: 'bar', data: { labels: ['Arus Kas'], datasets: [{ label: 'Pemasukan', data: [totalIncome], backgroundColor: '#22c55e' }, { label: 'Pengeluaran', data: [totalExpense], backgroundColor: '#ef4444' }] }, options: { plugins: { legend: { display: false } } } });
+            
+            const renderDoughnut = (cid, data, color) => {
+                destroyChart(cid);
+                charts[cid] = new Chart(document.getElementById(cid).getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: color }] }, options: { plugins: { legend: { position: 'bottom' } } } });
+            };
+            renderDoughnut('monthly-income-chart', incomeByCategory, ['#10b981']);
+            renderDoughnut('monthly-expense-chart', expenseByCategory, ['#ef4444']);
+            
+            const renderTable = (data, el) => {
+                el.innerHTML = Object.entries(data).map(([k,v]) => `<tr><td class="p-2">${k}</td><td class="p-2 text-right">${formatCurrency(v)}</td></tr>`).join('');
+            };
+            renderTable(incomeByCategory, monthlyIncomeTable);
+            renderTable(expenseByCategory, monthlyExpenseTable);
+        }
+
+        function renderAnnualReport() {
+            const startMonth = parseInt(annualReportMonthSelect.value);
+            const startYear = parseInt(annualReportYearSelect.value);
+            const cats = { pemasukan: categoriesData.pemasukan.map(c => c.name), pengeluaran: categoriesData.pengeluaran.map(c => c.name) };
+            const labels = [], annualData = {};
+            const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+            let firstMonthName = "", firstYear = "", lastMonthName = "", lastYear = "";
+            for(let i=0; i<12; i++) {
+                const d = new Date(startYear, startMonth + i, 1);
+                const key = `${d.getFullYear()}-${d.getMonth()}`;
+                labels.push(`${monthsShort[d.getMonth()]} ${d.getFullYear().toString().slice(-2)}`);
+                if (i === 0) { firstMonthName = MONTH_NAMES[d.getMonth()]; firstYear = d.getFullYear(); }
+                if (i === 11) { lastMonthName = MONTH_NAMES[d.getMonth()]; lastYear = d.getFullYear(); }
+                annualData[key] = { income: 0, expense: 0, cashflow: 0, incomeCats: {}, expenseCats: {} };
+                cats.pemasukan.forEach(c => annualData[key].incomeCats[c] = 0);
+                cats.pengeluaran.forEach(c => annualData[key].expenseCats[c] = 0);
+            }
+            annualReportInfoPdf.innerHTML = `<h3 class="text-xl font-semibold mb-4">Periode: ${firstMonthName} ${firstYear} - ${lastMonthName} ${lastYear}</h3>`;
+            annualReportInfoPdf.style.display = 'none';
+            
+            allTransactions.forEach(tx => {
+                const d = new Date(tx.date);
+                const key = `${d.getFullYear()}-${d.getMonth()}`;
+                if(annualData[key]) {
+                    if(tx.type === 'pemasukan') {
+                        annualData[key].income += tx.amount;
+                        if(annualData[key].incomeCats[tx.category] !== undefined) annualData[key].incomeCats[tx.category] += tx.amount;
+                    } else {
+                        annualData[key].expense += tx.amount;
+                        if(annualData[key].expenseCats[tx.category] !== undefined) annualData[key].expenseCats[tx.category] += tx.amount;
+                    }
+                    annualData[key].cashflow = annualData[key].income - annualData[key].expense;
+                }
+            });
+            
+            const keys = Object.keys(annualData);
+            const incomes = keys.map(k => annualData[k].income);
+            const expenses = keys.map(k => annualData[k].expense);
+            const cashflowValues = keys.map(k => annualData[k].cashflow);
+            
+            // Charts
+            const destroyChart = (cid) => { if(charts[cid]) charts[cid].destroy(); };
+            destroyChart('annual-income');
+            charts['annual-income'] = new Chart(document.getElementById('annual-income-chart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Pemasukan', data: incomes, backgroundColor: '#22c55e' }] } });
+            destroyChart('annual-expense');
+            charts['annual-expense'] = new Chart(document.getElementById('annual-expense-chart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Pengeluaran', data: expenses, backgroundColor: '#ef4444' }] } });
+            destroyChart('annual-cashflow');
+            charts['annual-cashflow'] = new Chart(document.getElementById('annual-cashflow-chart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Arus Kas', data: cashflowValues, backgroundColor: cashflowValues.map(v => v >= 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)'), borderColor: cashflowValues.map(v => v >= 0 ? '#22c55e' : '#ef4444'), borderWidth: 1 }] } });
+            
+            // Tables
+            const renderTable = (headerId, bodyId, type, catList) => {
+                document.getElementById(headerId).innerHTML = `<th class="p-2 annual-table-category">Kategori</th>` + labels.map(l => `<th class="p-2 text-right">${l}</th>`).join('') + `<th class="p-2 text-right">Total</th>`;
+                let bodyHtml = '';
+                catList.sort().forEach(c => {
+                    let row = `<tr><td class="p-2 annual-table-category">${c}</td>`;
+                    let total = 0;
+                    keys.forEach(k => {
+                        const val = type === 'income' ? annualData[k].incomeCats[c] : annualData[k].expenseCats[c];
+                        row += `<td class="p-2 text-right">${formatCurrency(val)}</td>`;
+                        total += val;
+                    });
+                    row += `<td class="p-2 text-right font-bold">${formatCurrency(total)}</td></tr>`;
+                    bodyHtml += row;
+                });
+                document.getElementById(bodyId).innerHTML = bodyHtml;
+            };
+            renderTable('annual-income-header', 'annual-income-body', 'income', cats.pemasukan);
+            renderTable('annual-expense-header', 'annual-expense-body', 'expense', cats.pengeluaran);
+        }
+
+        function renderAnomalyReport() {
+            // ... (Simple check logic)
+            anomalyList.innerHTML = '';
+            const exps = allTransactions.filter(t => t.type === 'pengeluaran').sort((a,b) => new Date(a.date) - new Date(b.date));
+            const anomalies = [];
+            exps.forEach(tx => {
+                const txDate = new Date(tx.date).getTime();
+                const history = exps.filter(h => {
+                    const hDate = new Date(h.date).getTime();
+                    return h.category === tx.category && hDate < txDate && hDate >= (txDate - 90*24*3600*1000);
+                });
+                if(history.length > 0) {
+                    const avg = history.reduce((sum, h) => sum + h.amount, 0) / history.length;
+                    if(tx.amount >= avg * 3 && (tx.amount - avg) >= 100000) {
+                        anomalies.push({...tx, avg});
+                    }
+                }
+            });
+            if(anomalies.length === 0) anomalyList.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Tidak ada anomali.</td></tr>';
+            else anomalies.forEach(a => {
+                anomalyList.innerHTML += `<tr><td class="p-2">${new Date(a.date).toLocaleDateString('id-ID')}</td><td class="p-2">${a.category}</td><td class="p-2">${a.description}</td><td class="p-2 text-right font-bold text-red-600">${formatCurrency(a.amount)}</td><td class="p-2 text-right">${formatCurrency(a.avg)}</td></tr>`;
+            });
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const tx = { date: dateInput.value, type: typeSelect.value, category: categorySelect.value, amount: parseFloat(amountInput.value), description: descriptionInput.value, user_id: userId };
+            await db.from('transactions').insert(tx);
+            formStatus.textContent = 'Tersimpan!';
+            transactionForm.reset();
+            dateInput.valueAsDate = new Date();
+            updateCategoryOptions();
+            loadTransactions();
+            setTimeout(() => formStatus.textContent = '', 2000);
+        }
+
+        // --- GLOBAL EXPORTS ---
+        window.openCategoryModal = (mode, id) => {
+            categoryModalForm.reset(); categoryModalId.value = id; 
+            if(mode === 'edit') {
+                const c = [...categoriesData.pemasukan, ...categoriesData.pengeluaran].find(x => x.id == id);
+                if(c) { document.getElementById('category-modal-name').value = c.name; document.getElementById('category-modal-type').value = c.type; }
+            }
+            showModal(categoryModal);
+        };
+        window.openDeleteModal = (id) => { deleteModalId.value = id; showModal(deleteModal); };
+        
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            dateInput.valueAsDate = new Date();
+            
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if(document.getElementById('password').value === 'alfinrho$') {
+                    loginOverlay.classList.add('hidden'); 
+                    mainAppContent.classList.remove('hidden');
+                    
+                    // --- PERBAIKAN SAFETY CHECK ---
+                    const { data: { user } } = await db.auth.getUser();
+                    let currentUser = user;
+
+                    if (!currentUser) {
+                        // Coba daftar user baru random jika belum ada sesi
+                        const randomEmail = `user${Date.now()}@demo.com`;
+                        const { data: signUpData, error: signUpError } = await db.auth.signUp({
+                            email: randomEmail,
+                            password: 'password123' // Password lebih kuat
+                        });
+                        
+                        if (signUpError) {
+                            console.error("SignUp Error:", signUpError);
+                            alert("Gagal mendaftar otomatis ke Supabase: " + signUpError.message);
+                            return;
+                        }
+                        
+                        // Setelah signup, coba ambil user lagi
+                        currentUser = signUpData.user;
+                        
+                        // Jika masih null, mungkin karena butuh verifikasi email
+                        if (!currentUser) {
+                             const { data: refetched } = await db.auth.getUser();
+                             currentUser = refetched.user;
+                        }
+                    }
+
+                    // Jika SANGAT gagal (Email confirm nyala), beri peringatan, JANGAN crash
+                    if (!currentUser) {
+                         alert("Gagal login otomatis. Kemungkinan 'Confirm Email' menyala di Supabase Anda. Mohon matikan di Authentication -> Providers -> Email, atau cek console log.");
+                         return; 
+                    }
+
+                    userId = currentUser.id;
+                    userIdDisplay.textContent = "ID: " + userId;
+                    await loadCategories(); await loadTransactions();
+                    initFilters();
+                } else {
+                    loginError.classList.remove('hidden');
+                }
+            });
+            
+            transactionForm.addEventListener('submit', handleFormSubmit);
+            typeSelect.addEventListener('change', updateCategoryOptions);
+            
+            navLinks.forEach(l => l.addEventListener('click', e => { e.preventDefault(); views.forEach(v => v.classList.add('hidden')); document.getElementById(l.dataset.view).classList.remove('hidden'); if(l.dataset.view==='view-laporan-bulanan') renderMonthlyReport(); if(l.dataset.view==='view-laporan-tahunan') renderAnnualReport(); if(l.dataset.view==='view-transaksi-anomali') renderAnomalyReport(); }));
+            
+            addCategoryBtn.addEventListener('click', () => window.openCategoryModal('add'));
+            categoryModalForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const d = { name: document.getElementById('category-modal-name').value, type: document.getElementById('category-modal-type').value, user_id: userId };
+                if(categoryModalId.value) await db.from('categories').update(d).eq('id', categoryModalId.value);
+                else await db.from('categories').insert(d);
+                hideModal(categoryModal); loadCategories();
+            });
+            
+            document.getElementById('delete-modal-confirm').addEventListener('click', async () => {
+                if(document.getElementById('delete-modal-password').value === 'alfinrho$') {
+                    await db.from('categories').delete().eq('id', deleteModalId.value);
+                    hideModal(deleteModal); loadCategories();
+                }
+            });
+            
+            [categoryModalCancel, deleteModalCancel].forEach(b => b.addEventListener('click', () => { hideModal(categoryModal); hideModal(deleteModal); }));
+            
+            downloadMonthlyPdfBtn.addEventListener('click', downloadMonthlyReportAsPDF);
+            downloadAnnualPdfBtn.addEventListener('click', downloadAnnualReportAsPDF);
+            openExcelModalBtn.addEventListener('click', openExcelDownloadModal);
+            excelDownloadCancelBtn.addEventListener('click', () => hideModal(excelDownloadModal));
+            excelDownloadConfirmBtn.addEventListener('click', downloadTransactionsAsExcel);
         });
-
     </script>
-
 </body>
-
 </html>
