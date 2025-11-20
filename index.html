@@ -31,7 +31,7 @@
         input[type='number'] { -moz-appearance: textfield; }
         
         /* CSS PDF */
-        body.is-printing-pdf .printable-area { font-size: 10px; }
+        body.is-printing-pdf .printable-area { font-size: 10px; background: white; padding: 20px; }
         body.is-printing-pdf .printable-area h2 { font-size: 1.25rem; line-height: 1.75rem; }
         body.is-printing-pdf .printable-area h3 { font-size: 1rem; line-height: 1.5rem; }
         body.is-printing-pdf .printable-area th, body.is-printing-pdf .printable-area td { padding: 4px 6px !important; font-size: 8px !important; }
@@ -70,7 +70,7 @@
                 <h1 class="text-2xl font-bold text-blue-700">Keuanganku</h1>
                 <nav>
                     <ul class="flex space-x-1">
-                        <li><a href="#" data-view="view-beranda" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Beranda</a></li>
+                        <li><a href="#" data-view="view-beranda" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100 bg-gray-100 text-blue-600">Beranda</a></li>
                         <li><a href="#" data-view="view-laporan-bulanan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Laporan Bulanan</a></li>
                         <li><a href="#" data-view="view-laporan-tahunan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Laporan Tahunan</a></li>
                         <li><a href="#" data-view="view-transaksi-anomali" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Anomali</a></li>
@@ -185,7 +185,7 @@
                 </div>
             </div>
 
-            <!-- View: Laporan Bulanan (Kode sama, disederhanakan untuk hemat space) -->
+            <!-- View: Laporan Bulanan -->
             <div id="view-laporan-bulanan" class="view-content hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-lg printable-area">
                     <div class="flex justify-between items-center mb-4 no-print">
@@ -205,23 +205,55 @@
                         <div class="bg-red-50 p-5 rounded-xl border border-red-200"><div class="text-sm font-medium text-red-600">Total Pengeluaran</div><div id="monthly-report-expense" class="text-2xl font-bold text-red-800 mt-1">IDR 0</div></div>
                         <div class="bg-blue-50 p-5 rounded-xl border border-blue-200"><div class="text-sm font-medium text-blue-600">Saldo Akhir</div><div id="monthly-report-cashflow" class="text-2xl font-bold text-blue-800 mt-1">IDR 0</div></div>
                     </div>
+                    
+                    <!-- CHART AREA -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                         <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Arus Kas</h3><canvas id="monthly-cashflow-chart"></canvas></div>
                         <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Pemasukan</h3><canvas id="monthly-income-chart"></canvas></div>
                         <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Pengeluaran</h3><canvas id="monthly-expense-chart"></canvas></div>
                     </div>
+                    
+                    <!-- DETAILS TABLE -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div><h3 class="text-lg font-semibold mb-3 text-green-700">Rincian Pemasukan</h3><div id="monthly-income-table" class="max-h-96 overflow-y-auto"></div></div>
-                        <div><h3 class="text-lg font-semibold mb-3 text-red-700">Rincian Pengeluaran</h3><div id="monthly-expense-table" class="max-h-96 overflow-y-auto"></div></div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-green-700">Rincian Pemasukan</h3>
+                            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-green-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="monthly-income-table-body" class="divide-y divide-gray-200 bg-white"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 text-red-700">Rincian Pengeluaran</h3>
+                            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-red-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
+                                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="monthly-expense-table-body" class="divide-y divide-gray-200 bg-white"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- View: Laporan Tahunan & Anomali (Placeholder konten sama) -->
-            <div id="view-laporan-tahunan" class="view-content hidden"><div class="bg-white p-6 rounded-2xl shadow-lg printable-area"><div class="flex justify-between items-center mb-4 no-print"><h2 class="text-2xl font-bold pdf-hidden">Laporan Tahunan</h2><button id="download-annual-pdf" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"><i class="fas fa-file-pdf"></i> <span>Download PDF</span></button></div><h2 class="text-2xl font-bold mb-4 hidden pdf-visible">Laporan Tahunan</h2><div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"><div><label class="block text-sm font-medium text-gray-700">Mulai Bulan</label><select id="annual-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium text-gray-700">Mulai Tahun</label><select id="annual-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div><div id="annual-report-info-pdf" class="mb-4 hidden pdf-visible"></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pemasukan 12 Bulan</h3><canvas id="annual-income-chart" height="200"></canvas></div><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pengeluaran 12 Bulan</h3><canvas id="annual-expense-chart" height="200"></canvas></div></div><div class="p-5 rounded-xl border border-gray-200 mb-8"><h3 class="text-lg font-semibold mb-3 text-center">Arus Kas 12 Bulan</h3><canvas id="annual-cashflow-chart" height="150"></canvas></div><div class="space-y-8"><div><h3 class="text-xl font-semibold mb-3 text-blue-700">Overview</h3><div class="overflow-x-auto shadow rounded-lg"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-blue-600 text-white"><tr id="annual-overview-header"></tr></thead><tbody id="annual-overview-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div></div></div>
+            <!-- View: Laporan Tahunan -->
+            <div id="view-laporan-tahunan" class="view-content hidden"><div class="bg-white p-6 rounded-2xl shadow-lg printable-area"><div class="flex justify-between items-center mb-4 no-print"><h2 class="text-2xl font-bold pdf-hidden">Laporan Tahunan</h2><button id="download-annual-pdf" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"><i class="fas fa-file-pdf"></i> <span>Download PDF</span></button></div><h2 class="text-2xl font-bold mb-4 hidden pdf-visible">Laporan Tahunan</h2><div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"><div><label class="block text-sm font-medium text-gray-700">Mulai Bulan</label><select id="annual-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium text-gray-700">Mulai Tahun</label><select id="annual-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div><div id="annual-report-info-pdf" class="mb-4 hidden pdf-visible"></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pemasukan 12 Bulan</h3><canvas id="annual-income-chart" height="200"></canvas></div><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pengeluaran 12 Bulan</h3><canvas id="annual-expense-chart" height="200"></canvas></div></div><div class="p-5 rounded-xl border border-gray-200 mb-8"><h3 class="text-lg font-semibold mb-3 text-center">Arus Kas 12 Bulan</h3><canvas id="annual-cashflow-chart" height="150"></canvas></div><div class="space-y-8"><div><h3 class="text-xl font-semibold mb-3 text-blue-700">Overview</h3><div class="overflow-x-auto shadow rounded-lg"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-blue-600 text-white"><tr id="annual-overview-header"></tr></thead><tbody id="annual-overview-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div><div><h3 class="text-xl font-semibold mb-3 text-green-700">Pemasukan Bulanan</h3><div class="overflow-x-auto shadow rounded-lg"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-green-600 text-white"><tr id="annual-income-header"></tr></thead><tbody id="annual-income-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div><div><h3 class="text-xl font-semibold mb-3 text-red-700">Pengeluaran Bulanan</h3><div class="overflow-x-auto shadow rounded-lg"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-red-600 text-white"><tr id="annual-expense-header"></tr></thead><tbody id="annual-expense-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div></div></div>
+            
+            <!-- View: Anomali -->
             <div id="view-transaksi-anomali" class="view-content hidden"><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-2xl font-bold mb-4">Deteksi Transaksi Anomali</h2><p class="text-gray-600 mb-6 pb-6 border-b border-gray-200">Menampilkan transaksi pengeluaran > 3x rata-rata.</p><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Rata-rata</th></tr></thead><tbody id="anomaly-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>
 
-            <!-- View: Master Setting (Updated) -->
+            <!-- View: Master Setting -->
             <div id="view-master-setting" class="view-content hidden space-y-8">
                 <!-- Kategori -->
                 <div class="bg-white p-6 rounded-2xl shadow-lg">
@@ -280,12 +312,11 @@
         let categoriesData = { pemasukan: [], pengeluaran: [] };
         let allTransactions = []; 
         let charts = {}; 
-        let deleteTarget = null; // { type: 'transaction'|'category'|'recurring', id: 1 }
+        let deleteTarget = null; 
         const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
         // DOM Elements
         const loginOverlay = document.getElementById('login-overlay');
-        const formStatus = document.getElementById('form-status');
         const transactionForm = document.getElementById('transaction-form');
         const recurringContainer = document.getElementById('recurring-container');
         const isRecurringInput = document.getElementById('is-recurring');
@@ -294,7 +325,14 @@
         const txIdInput = document.getElementById('tx-id');
         const btnSaveTx = document.getElementById('btn-save-tx');
         const btnCancelEdit = document.getElementById('btn-cancel-edit');
-
+        const monthlyReportMonthSelect = document.getElementById('monthly-report-month');
+        const monthlyReportYearSelect = document.getElementById('monthly-report-year');
+        const annualReportMonthSelect = document.getElementById('annual-report-month');
+        const annualReportYearSelect = document.getElementById('annual-report-year');
+        const excelMonthSelect = document.getElementById('excel-month-select');
+        const excelYearSelect = document.getElementById('excel-year-select');
+        const addCategoryBtn = document.getElementById('add-category-btn');
+        
         // UTILS
         function formatCurrency(amount) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount); }
         function showStatus(msg, isError = false) {
@@ -307,11 +345,40 @@
         function showModal(id) { document.getElementById('modal-backdrop').classList.remove('hidden'); document.getElementById(id).classList.remove('hidden'); }
         function hideModal(id) { document.getElementById('modal-backdrop').classList.add('hidden'); document.getElementById(id).classList.add('hidden'); }
 
+        // INITIALIZATION
+        function initFilters() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const years = [currentYear, currentYear - 1, currentYear - 2];
+
+            const populate = (mSel, ySel) => {
+                mSel.innerHTML = ''; ySel.innerHTML = '';
+                MONTH_NAMES.forEach((m, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i; opt.textContent = m;
+                    mSel.appendChild(opt);
+                });
+                years.forEach(y => {
+                    const opt = document.createElement('option');
+                    opt.value = y; opt.textContent = y;
+                    ySel.appendChild(opt);
+                });
+                mSel.value = currentMonth;
+                ySel.value = currentYear;
+            };
+
+            populate(monthlyReportMonthSelect, monthlyReportYearSelect);
+            populate(annualReportMonthSelect, annualReportYearSelect);
+            populate(excelMonthSelect, excelYearSelect);
+            annualReportMonthSelect.value = 0;
+        }
+
         // DATA LOADERS
         async function loadData() {
             await Promise.all([loadCategories(), loadTransactions(), loadRecurring()]);
             renderDashboard();
-            checkAndGenerateRecurring(); // Check auto-generate on load
+            checkAndGenerateRecurring(); 
         }
 
         async function loadCategories() {
@@ -334,7 +401,23 @@
         }
 
         async function initDefaultCategories() {
-            const defaults = [{name:"Gaji",type:"pemasukan",user_id:userId},{name:"Makan",type:"pengeluaran",user_id:userId}];
+            const defaults = [
+                { name: "Gaji", type: "pemasukan", user_id: userId },
+                { name: "Bonus", type: "pemasukan", user_id: userId },
+                // Kategori Lengkap
+                { name: "Asuransi", type: "pengeluaran", user_id: userId },
+                { name: "Belanja Harian", type: "pengeluaran", user_id: userId },
+                { name: "Cicilan / Hutang", type: "pengeluaran", user_id: userId },
+                { name: "Donasi / Sedekah", type: "pengeluaran", user_id: userId },
+                { name: "Hiburan / Rekreasi", type: "pengeluaran", user_id: userId },
+                { name: "Kesehatan / Obat-obatan", type: "pengeluaran", user_id: userId },
+                { name: "Lain-lain (Tak Terduga)", type: "pengeluaran", user_id: userId },
+                { name: "Listrik, Air, Internet", type: "pengeluaran", user_id: userId },
+                { name: "Makan & Minum", type: "pengeluaran", user_id: userId },
+                { name: "Pendidikan", type: "pengeluaran", user_id: userId },
+                { name: "Tempat Tinggal (Sewa/KPR)", type: "pengeluaran", user_id: userId },
+                { name: "Transportasi", type: "pengeluaran", user_id: userId }
+            ];
             await db.from('categories').insert(defaults);
             await loadCategories();
         }
@@ -354,31 +437,23 @@
 
             for (const rule of rules) {
                 let lastGenDate = rule.last_generated ? new Date(rule.last_generated) : null;
-                
-                // Cek apakah sudah digenerate bulan ini
-                const alreadyGeneratedThisMonth = lastGenDate && 
-                                                  lastGenDate.getMonth() === currentMonth && 
-                                                  lastGenDate.getFullYear() === currentYear;
+                const alreadyGeneratedThisMonth = lastGenDate && lastGenDate.getMonth() === currentMonth && lastGenDate.getFullYear() === currentYear;
 
-                // Jika belum generate bulan ini DAN tanggal hari ini >= tanggal jadwal
                 if (!alreadyGeneratedThisMonth && todayDate >= rule.day_of_month) {
-                    // Buat transaksi baru
                     newTransactions.push({
-                        date: new Date().toISOString().split('T')[0], // Set to today
+                        date: new Date().toISOString().split('T')[0], 
                         type: rule.type,
                         category: rule.category,
                         amount: rule.amount,
                         description: rule.description + " (Transaksi Berulang)",
                         user_id: userId
                     });
-                    // Update last_generated rule
                     rulesToUpdate.push(rule.id);
                 }
             }
 
             if (newTransactions.length > 0) {
                 await db.from('transactions').insert(newTransactions);
-                // Update last_generated date to NOW for processed rules
                 const todayStr = new Date().toISOString().split('T')[0];
                 for (const id of rulesToUpdate) {
                     await db.from('recurring_transactions').update({ last_generated: todayStr }).eq('id', id);
@@ -390,16 +465,20 @@
         }
 
         // RENDERERS
+        function calculateOpeningBalance(targetMonth, targetYear) {
+             const cutoffDate = new Date(targetYear, targetMonth, 1);
+             let balance = 0;
+             allTransactions.forEach(tx => {
+                 const txDate = new Date(tx.date);
+                 if (txDate < cutoffDate) balance += (tx.type === 'pemasukan' ? tx.amount : -tx.amount);
+             });
+             return balance;
+        }
+
         function renderDashboard() {
             const now = new Date();
-            // Calculate Opening Balance
-            const cutoffDate = new Date(now.getFullYear(), now.getMonth(), 1);
-            let openingBalance = 0;
-            allTransactions.forEach(tx => {
-                if (new Date(tx.date) < cutoffDate) openingBalance += (tx.type === 'pemasukan' ? tx.amount : -tx.amount);
-            });
-
-            // Filter Current Month
+            const openingBalance = calculateOpeningBalance(now.getMonth(), now.getFullYear());
+            
             let inc = 0, exp = 0;
             const curMonthTx = allTransactions.filter(t => {
                 const d = new Date(t.date);
@@ -408,14 +487,12 @@
 
             transactionList.innerHTML = '';
             
-            // Opening Balance Row
             if (openingBalance !== 0) {
                 const rowClass = openingBalance >= 0 ? 'bg-yellow-50' : 'bg-red-50';
                 const colClass = openingBalance >= 0 ? 'text-yellow-700' : 'text-red-700';
                 transactionList.innerHTML += `<tr class="${rowClass} font-semibold border-b border-yellow-200"><td class="px-6 py-3 text-xs text-gray-500">1 ${MONTH_NAMES[now.getMonth()]}</td><td class="px-6 py-3 text-gray-700">Pemasukan Sisa Saldo</td><td class="px-6 py-3 italic text-gray-500">Otomatis bulan lalu</td><td class="px-6 py-3 text-right ${colClass}">${formatCurrency(openingBalance)}</td><td></td></tr>`;
             }
 
-            // Transactions
             if (curMonthTx.length === 0 && openingBalance === 0) {
                 transactionList.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">Belum ada transaksi bulan ini.</td></tr>`;
             } else {
@@ -501,25 +578,18 @@
         window.editTransaction = (id) => {
             const tx = allTransactions.find(t => t.id === id);
             if (!tx) return;
-            
             document.getElementById('date').value = tx.date;
             document.getElementById('type').value = tx.type;
-            updateCategoryOptions(); // Refresh category list based on type
+            updateCategoryOptions();
             document.getElementById('category').value = tx.category;
             document.getElementById('amount').value = tx.amount;
             document.getElementById('description').value = tx.description || '';
-            
-            // Setup Form for Edit
             txIdInput.value = id;
             btnSaveTx.textContent = "Update Transaksi";
             btnSaveTx.classList.replace('bg-blue-600', 'bg-yellow-600');
             btnSaveTx.classList.replace('hover:bg-blue-700', 'hover:bg-yellow-700');
             btnCancelEdit.classList.remove('hidden');
-            
-            // Hide recurring checkbox in edit mode (complexity reduction)
             recurringContainer.classList.add('hidden');
-            
-            // Scroll to form
             transactionForm.scrollIntoView({ behavior: 'smooth' });
         };
 
@@ -553,14 +623,219 @@
             showModal('category-modal');
         };
 
+        async function downloadElementAsPDF(element, filename) {
+            showStatus("Mempersiapkan PDF...", false);
+            document.body.classList.add('is-printing-pdf');
+            try {
+                const pdfHidden = element.querySelectorAll('.pdf-hidden');
+                const pdfVisible = element.querySelectorAll('.pdf-visible');
+                pdfHidden.forEach(el => el.style.display = 'none');
+                pdfVisible.forEach(el => el.style.display = 'block');
+                const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('l', 'mm', 'a4');
+                const width = pdf.internal.pageSize.getWidth();
+                const height = pdf.internal.pageSize.getHeight();
+                pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+                pdf.save(filename);
+                showStatus("PDF berhasil di-download.");
+            } catch (err) { alert("Gagal download PDF: " + err.message); } 
+            finally {
+                const pdfHidden = element.querySelectorAll('.pdf-hidden');
+                const pdfVisible = element.querySelectorAll('.pdf-visible');
+                pdfHidden.forEach(el => el.style.display = '');
+                pdfVisible.forEach(el => el.style.display = '');
+                document.body.classList.remove('is-printing-pdf');
+            }
+        }
+
+        // REPORT RENDERERS
+        function renderMonthlyReport() {
+            const selectedMonth = parseInt(monthlyReportMonthSelect.value);
+            const selectedYear = parseInt(monthlyReportYearSelect.value);
+            const monthName = MONTH_NAMES[selectedMonth];
+            document.getElementById('monthly-report-info-pdf').innerHTML = `<h3 class="text-xl font-semibold mb-4">Periode: ${monthName} ${selectedYear}</h3>`;
+            
+            const openingBalance = calculateOpeningBalance(selectedMonth, selectedYear);
+            let totalIncome = 0, totalExpense = 0;
+            const incomeByCategory = {}, expenseByCategory = {};
+            
+            const filteredTx = allTransactions.filter(tx => {
+                const txDate = new Date(tx.date);
+                return txDate.getMonth() === selectedMonth && txDate.getFullYear() === selectedYear;
+            });
+            
+            filteredTx.forEach(tx => {
+                if (tx.type === 'pemasukan') { 
+                    totalIncome += tx.amount; 
+                    incomeByCategory[tx.category] = (incomeByCategory[tx.category] || 0) + tx.amount; 
+                } else { 
+                    totalExpense += tx.amount; 
+                    expenseByCategory[tx.category] = (expenseByCategory[tx.category] || 0) + tx.amount; 
+                }
+            });
+
+            if (openingBalance > 0) incomeByCategory["Saldo Awal"] = openingBalance;
+
+            document.getElementById('monthly-report-income').textContent = formatCurrency(totalIncome);
+            document.getElementById('monthly-report-expense').textContent = formatCurrency(totalExpense);
+            document.getElementById('monthly-report-cashflow').textContent = formatCurrency(openingBalance + totalIncome - totalExpense);
+            
+            const destroyChart = (cid) => { if(charts[cid]) charts[cid].destroy(); };
+            destroyChart('cashflow');
+            
+            // Chart Logic with Empty State Handling
+            const createDoughnutConfig = (data) => {
+                const keys = Object.keys(data);
+                const values = Object.values(data);
+                if (keys.length === 0) {
+                    return { 
+                        labels: ["Data Kosong"], 
+                        datasets: [{ data: [1], backgroundColor: ['#e5e7eb'] }] 
+                    };
+                }
+                const bgColors = keys.map((k, i) => {
+                    if (k === "Saldo Awal") return '#eab308';
+                    return `hsl(${(i * 137.508) % 360}, 70%, 60%)`;
+                });
+                return { labels: keys, datasets: [{ data: values, backgroundColor: bgColors }] };
+            };
+
+            charts['cashflow'] = new Chart(document.getElementById('monthly-cashflow-chart').getContext('2d'), { 
+                type: 'bar', 
+                data: { 
+                    labels: ['Komposisi Dana'], 
+                    datasets: [
+                        { label: 'Saldo Awal', data: [openingBalance], backgroundColor: '#eab308' },
+                        { label: 'Pemasukan', data: [totalIncome], backgroundColor: '#22c55e' }, 
+                        { label: 'Pengeluaran', data: [totalExpense], backgroundColor: '#ef4444' }
+                    ] 
+                }, 
+                options: { plugins: { legend: { display: true } }, scales: { x: { stacked: true }, y: { stacked: true } } } 
+            });
+            
+            const renderDoughnut = (cid, data) => {
+                destroyChart(cid);
+                const config = createDoughnutConfig(data);
+                charts[cid] = new Chart(document.getElementById(cid).getContext('2d'), { 
+                    type: 'doughnut', 
+                    data: config, 
+                    options: { 
+                        plugins: { legend: { position: 'bottom' }, tooltip: { enabled: Object.keys(data).length > 0 } } 
+                    } 
+                });
+            };
+            
+            renderDoughnut('monthly-income-chart', incomeByCategory);
+            renderDoughnut('monthly-expense-chart', expenseByCategory);
+            
+            const renderTable = (data, el) => {
+                const keys = Object.keys(data);
+                if (keys.length === 0) {
+                    el.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-400 italic">Tidak ada data</td></tr>';
+                } else {
+                    el.innerHTML = Object.entries(data).map(([k,v]) => `<tr><td class="p-2 border-b text-sm text-gray-700">${k}</td><td class="p-2 text-right border-b font-medium text-sm">${formatCurrency(v)}</td></tr>`).join('');
+                }
+            };
+            
+            renderTable(incomeByCategory, document.getElementById('monthly-income-table-body'));
+            renderTable(expenseByCategory, document.getElementById('monthly-expense-table-body'));
+        }
+
+        function renderAnnualReport() {
+            const startMonth = parseInt(annualReportMonthSelect.value);
+            const startYear = parseInt(annualReportYearSelect.value);
+            const cats = { pemasukan: categoriesData.pemasukan.map(c => c.name), pengeluaran: categoriesData.pengeluaran.map(c => c.name) };
+            const labels = [], annualData = {};
+            const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+            
+            for(let i=0; i<12; i++) {
+                const d = new Date(startYear, startMonth + i, 1);
+                const key = `${d.getFullYear()}-${d.getMonth()}`;
+                labels.push(`${monthsShort[d.getMonth()]} ${d.getFullYear().toString().slice(-2)}`);
+                annualData[key] = { income: 0, expense: 0, cashflow: 0, incomeCats: {}, expenseCats: {} };
+                cats.pemasukan.forEach(c => annualData[key].incomeCats[c] = 0);
+                cats.pengeluaran.forEach(c => annualData[key].expenseCats[c] = 0);
+            }
+            
+            allTransactions.forEach(tx => {
+                const d = new Date(tx.date);
+                const key = `${d.getFullYear()}-${d.getMonth()}`;
+                if(annualData[key]) {
+                    if(tx.type === 'pemasukan') {
+                        annualData[key].income += tx.amount;
+                        if(annualData[key].incomeCats[tx.category] !== undefined) annualData[key].incomeCats[tx.category] += tx.amount;
+                    } else {
+                        annualData[key].expense += tx.amount;
+                        if(annualData[key].expenseCats[tx.category] !== undefined) annualData[key].expenseCats[tx.category] += tx.amount;
+                    }
+                    annualData[key].cashflow = annualData[key].income - annualData[key].expense;
+                }
+            });
+            
+            const keys = Object.keys(annualData);
+            const incomes = keys.map(k => annualData[k].income);
+            const expenses = keys.map(k => annualData[k].expense);
+            const cashflowValues = keys.map(k => annualData[k].cashflow);
+            
+            const destroyChart = (cid) => { if(charts[cid]) charts[cid].destroy(); };
+            destroyChart('annual-income');
+            charts['annual-income'] = new Chart(document.getElementById('annual-income-chart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Pemasukan', data: incomes, backgroundColor: '#22c55e' }] } });
+            destroyChart('annual-expense');
+            charts['annual-expense'] = new Chart(document.getElementById('annual-expense-chart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Pengeluaran', data: expenses, backgroundColor: '#ef4444' }] } });
+            destroyChart('annual-cashflow');
+            charts['annual-cashflow'] = new Chart(document.getElementById('annual-cashflow-chart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'Arus Kas', data: cashflowValues, backgroundColor: cashflowValues.map(v => v >= 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)'), borderColor: cashflowValues.map(v => v >= 0 ? '#22c55e' : '#ef4444'), borderWidth: 1 }] } });
+            
+            const renderTable = (headerId, bodyId, type, catList) => {
+                document.getElementById(headerId).innerHTML = `<th class="p-2 annual-table-category">Kategori</th>` + labels.map(l => `<th class="p-2 text-right">${l}</th>`).join('') + `<th class="p-2 text-right">Total</th>`;
+                let bodyHtml = '';
+                catList.sort().forEach(c => {
+                    let row = `<tr><td class="p-2 annual-table-category">${c}</td>`;
+                    let total = 0;
+                    keys.forEach(k => {
+                        const val = type === 'income' ? annualData[k].incomeCats[c] : annualData[k].expenseCats[c];
+                        row += `<td class="p-2 text-right">${formatCurrency(val)}</td>`;
+                        total += val;
+                    });
+                    row += `<td class="p-2 text-right font-bold">${formatCurrency(total)}</td></tr>`;
+                    bodyHtml += row;
+                });
+                document.getElementById(bodyId).innerHTML = bodyHtml;
+            };
+            renderTable('annual-income-header', 'annual-income-body', 'income', cats.pemasukan);
+            renderTable('annual-expense-header', 'annual-expense-body', 'expense', cats.pengeluaran);
+        }
+
+        function renderAnomalyReport() {
+            const list = document.getElementById('anomaly-list');
+            list.innerHTML = '';
+            const exps = allTransactions.filter(t => t.type === 'pengeluaran').sort((a,b) => new Date(a.date) - new Date(b.date));
+            const anomalies = [];
+            exps.forEach(tx => {
+                const txDate = new Date(tx.date).getTime();
+                const history = exps.filter(h => {
+                    const hDate = new Date(h.date).getTime();
+                    return h.category === tx.category && hDate < txDate && hDate >= (txDate - 90*24*3600*1000);
+                });
+                if(history.length > 0) {
+                    const avg = history.reduce((sum, h) => sum + h.amount, 0) / history.length;
+                    if(tx.amount >= avg * 3 && (tx.amount - avg) >= 100000) {
+                        anomalies.push({...tx, avg});
+                    }
+                }
+            });
+            if(anomalies.length === 0) list.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Tidak ada anomali.</td></tr>';
+            else anomalies.forEach(a => {
+                list.innerHTML += `<tr><td class="p-2">${new Date(a.date).toLocaleDateString('id-ID')}</td><td class="p-2">${a.category}</td><td class="p-2">${a.description}</td><td class="p-2 text-right font-bold text-red-600">${formatCurrency(a.amount)}</td><td class="p-2 text-right">${formatCurrency(a.avg)}</td></tr>`;
+            });
+        }
+
         // EVENT LISTENERS
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(document.getElementById('password').value === 'alfinrho$') {
                 loginOverlay.classList.add('hidden');
                 document.getElementById('main-app-content').classList.remove('hidden');
-                
-                // Auth Flow
                 let { data: { user } } = await db.auth.getUser();
                 if (!user) {
                     const { data: up } = await db.auth.signUp({ email: `user${Date.now()}@demo.com`, password: 'password123' });
@@ -568,9 +843,8 @@
                 }
                 userId = user?.id;
                 document.getElementById('user-id-display').textContent = "ID: " + userId;
-                
                 await loadData();
-                // Init charts/filters (omitted for brevity, assumes standard setup)
+                initFilters();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
@@ -579,7 +853,6 @@
         transactionForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!userId) return alert("Sesi habis.");
-            
             const id = txIdInput.value;
             const dateVal = document.getElementById('date').value;
             const type = document.getElementById('type').value;
@@ -587,30 +860,19 @@
             const amount = document.getElementById('amount').value;
             const description = document.getElementById('description').value;
             const isRecurring = isRecurringInput.checked;
-
             btnSaveTx.textContent = "Proses..."; btnSaveTx.disabled = true;
-
             try {
                 const payload = { date: dateVal, type, category, amount, description, user_id: userId };
-                
                 if (id) {
-                    // UPDATE
                     await db.from('transactions').update(payload).eq('id', id);
                     showStatus("Transaksi diperbarui");
                     window.cancelEdit();
                 } else {
-                    // INSERT NEW
                     await db.from('transactions').insert([payload]);
                     showStatus("Transaksi disimpan");
-                    
-                    // Handle Recurring
                     if (isRecurring) {
                         const day = new Date(dateVal).getDate();
-                        const rulePayload = { 
-                            day_of_month: day, 
-                            type, category, amount, description, user_id: userId,
-                            last_generated: dateVal // Mark as generated for this month
-                        };
+                        const rulePayload = { day_of_month: day, type, category, amount, description, user_id: userId, last_generated: dateVal };
                         await db.from('recurring_transactions').insert([rulePayload]);
                         await loadRecurring();
                         showStatus("Transaksi & Aturan Berulang disimpan");
@@ -630,52 +892,80 @@
         document.getElementById('delete-modal-confirm').addEventListener('click', async () => {
             if(!deleteTarget) return;
             const { type, id } = deleteTarget;
-            
-            if (type === 'transaction') {
-                await db.from('transactions').delete().eq('id', id);
-                await loadTransactions();
-                renderDashboard();
-            } else if (type === 'category') {
-                await db.from('categories').delete().eq('id', id);
-                await loadCategories();
-            } else if (type === 'recurring') {
-                await db.from('recurring_transactions').delete().eq('id', id);
-                await loadRecurring();
-            }
-            
-            hideModal('delete-modal');
-            showStatus("Data dihapus.");
-            deleteTarget = null;
+            if (type === 'transaction') { await db.from('transactions').delete().eq('id', id); await loadTransactions(); renderDashboard(); } 
+            else if (type === 'category') { await db.from('categories').delete().eq('id', id); await loadCategories(); } 
+            else if (type === 'recurring') { await db.from('recurring_transactions').delete().eq('id', id); await loadRecurring(); }
+            hideModal('delete-modal'); showStatus("Data dihapus."); deleteTarget = null;
         });
 
         document.querySelectorAll('#delete-modal-cancel').forEach(b => b.addEventListener('click', () => hideModal('delete-modal')));
+        
         document.getElementById('category-modal-form').addEventListener('submit', async e => {
             e.preventDefault();
+            if (!userId) return alert("Sesi login tidak valid.");
             const name = document.getElementById('category-modal-name').value;
             const type = document.getElementById('category-modal-type').value;
             const id = document.getElementById('category-modal-id').value;
-            
-            if(id) await db.from('categories').update({name, type}).eq('id', id);
-            else await db.from('categories').insert([{name, type, user_id: userId}]);
-            
-            hideModal('category-modal');
-            await loadCategories();
+            const payload = { name, type, user_id: userId };
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = "Menyimpan..."; btn.disabled = true;
+            try {
+                let error;
+                if (id) { const res = await db.from('categories').update(payload).eq('id', id); error = res.error; } 
+                else { const res = await db.from('categories').insert([payload]); error = res.error; }
+                if (error) throw error;
+                hideModal('category-modal'); await loadCategories(); showStatus("Kategori berhasil disimpan!");
+            } catch (err) { alert("Gagal menyimpan kategori: " + (err.message)); } 
+            finally { btn.textContent = originalText; btn.disabled = false; }
         });
         document.getElementById('category-modal-cancel').addEventListener('click', () => hideModal('category-modal'));
         
-        // Navigasi
+        // NAVIGATION LOGIC (FIXED)
         document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', e => { 
             e.preventDefault(); 
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('bg-gray-100', 'text-blue-600'));
+            l.classList.add('bg-gray-100', 'text-blue-600');
             document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden')); 
-            document.getElementById(l.dataset.view).classList.remove('hidden'); 
-            if (l.dataset.view === 'view-laporan-bulanan') {
-                // Trigger render report logic (simplified here, ensure loadTransactions called)
-                // In full code, call renderMonthlyReport()
-            }
+            const viewId = l.dataset.view;
+            document.getElementById(viewId).classList.remove('hidden'); 
+            
+            if (viewId === 'view-laporan-bulanan') renderMonthlyReport();
+            if (viewId === 'view-laporan-tahunan') renderAnnualReport();
+            if (viewId === 'view-transaksi-anomali') renderAnomalyReport();
+            if (viewId === 'view-master-setting') renderMasterSettings();
         }));
+        
+        monthlyReportMonthSelect.addEventListener('change', renderMonthlyReport);
+        monthlyReportYearSelect.addEventListener('change', renderMonthlyReport);
+        annualReportMonthSelect.addEventListener('change', renderAnnualReport);
+        annualReportYearSelect.addEventListener('change', renderAnnualReport);
 
-        // Init Date
+        document.getElementById('download-monthly-pdf').addEventListener('click', () => {
+            const m = monthlyReportMonthSelect.options[monthlyReportMonthSelect.selectedIndex].text;
+            const y = monthlyReportYearSelect.value;
+            downloadElementAsPDF(document.querySelector('#view-laporan-bulanan .printable-area'), `Laporan_Bulanan_${m}_${y}.pdf`);
+        });
+        document.getElementById('download-annual-pdf').addEventListener('click', () => {
+            const y = annualReportYearSelect.value;
+            downloadElementAsPDF(document.querySelector('#view-laporan-tahunan .printable-area'), `Laporan_Tahunan_${y}.pdf`);
+        });
+        document.getElementById('open-excel-modal').addEventListener('click', () => showModal('excel-download-modal'));
+        document.getElementById('excel-download-cancel').addEventListener('click', () => hideModal('excel-download-modal'));
+        document.getElementById('download-excel-confirm').addEventListener('click', () => {
+            const mIdx = document.getElementById('excel-month-select').value;
+            const y = document.getElementById('excel-year-select').value;
+            const mName = MONTH_NAMES[mIdx];
+            const filtered = allTransactions.filter(t => { const d = new Date(t.date); return d.getMonth() == mIdx && d.getFullYear() == y; });
+            if(filtered.length === 0) return alert("Tidak ada data.");
+            const data = filtered.map(t => ({ Tanggal: t.date, Jenis: t.type, Kategori: t.category, Jumlah: t.amount, Keterangan: t.description }));
+            const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Transaksi");
+            XLSX.writeFile(wb, `Transaksi_${mName}_${y}.xlsx`); hideModal('excel-download-modal');
+        });
+
         document.getElementById('date').valueAsDate = new Date();
+        
+        addCategoryBtn.addEventListener('click', () => window.openCategoryModal('add'));
     </script>
 </body>
 </html>
