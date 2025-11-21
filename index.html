@@ -1,1750 +1,585 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-gray-100">
-
+<html lang="id" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencatat Keuangan Pribadi</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Pencatat Keuangan (V5 Budgeting)</title>
     
-    <!-- Library PDF & Excel -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        html { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
-        input[type='number']::-webkit-outer-spin-button, input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type='number'] { -moz-appearance: textfield; }
-        
-        /* CSS PDF */
-        body.is-printing-pdf .printable-area { font-size: 10px; background: white; padding: 20px; }
-        body.is-printing-pdf .printable-area h2 { font-size: 1.25rem; line-height: 1.75rem; }
-        body.is-printing-pdf .printable-area h3 { font-size: 1rem; line-height: 1.5rem; }
-        body.is-printing-pdf .printable-area th, body.is-printing-pdf .printable-area td { padding: 4px 6px !important; font-size: 8px !important; }
-        body.is-printing-pdf .no-print { display: none !important; }
-        body.is-printing-pdf .printable-area h2.pdf-hidden { display: none !important; }
-        body.is-printing-pdf .printable-area h2.pdf-visible { display: block !important; }
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none !important; }
+        @media print {
+            body * { visibility: hidden; }
+            .printable-area, .printable-area * { visibility: visible; }
+            .printable-area { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
+        /* Hilangkan spinner input number */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
+<body class="text-slate-800 bg-gray-50 h-screen flex flex-col overflow-hidden">
 
-<body class="h-full bg-gray-100">
-    <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden no-print"></div>
-
-    <!-- Overlay Login -->
-    <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 p-4 no-print">
-        <div class="w-full max-w-sm p-8 bg-white rounded-2xl shadow-xl">
-            <h2 class="text-3xl font-bold text-center text-gray-800">Hai Alfin Rho</h2>
-            <p class="mt-2 text-center text-gray-500">Masukkan password untuk akses</p>
-            <form id="login-form" class="mt-8 space-y-6">
-                <div>
-                    <input id="password" name="password" type="password" required class="w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Password">
-                </div>
-                <p id="login-error" class="text-sm text-red-600 text-center hidden">Password salah.</p>
-                <button type="submit" class="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 transition-colors">Login</button>
+    <!-- LOGIN SCREEN -->
+    <div id="screen-login" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 p-4">
+        <div class="w-full max-w-sm p-8 bg-white rounded-2xl shadow-xl text-center">
+            <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl mx-auto mb-4 shadow-lg"><i class="fas fa-wallet"></i></div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-1">Keuanganku V5</h1>
+            <p class="text-gray-400 text-xs mb-6">Smart Budgeting Edition</p>
+            <form id="login-form" class="space-y-4">
+                <input type="password" id="password" class="w-full px-4 py-3 rounded-xl border bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Password Akses" required>
+                <p id="login-error" class="text-red-500 text-xs hidden">Password salah</p>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shadow-md">Buka Aplikasi</button>
             </form>
         </div>
     </div>
 
-    <!-- Main App -->
-    <div id="main-app-content" class="hidden h-full flex flex-col">
-        <header class="bg-white shadow-md w-full p-4 flex justify-between items-center z-10 sticky top-0 no-print">
-            <div class="flex items-baseline space-x-6">
-                <h1 class="text-2xl font-bold text-blue-700">Keuanganku</h1>
-                <nav>
-                    <ul class="flex space-x-1">
-                        <li><a href="#" data-view="view-beranda" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100 bg-gray-100 text-blue-600">Beranda</a></li>
-                        <li><a href="#" data-view="view-laporan-bulanan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Laporan Bulanan</a></li>
-                        <li><a href="#" data-view="view-laporan-tahunan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Laporan Tahunan</a></li>
-                        <li><a href="#" data-view="view-transaksi-anomali" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Anomali</a></li>
-                        <li><a href="#" data-view="view-master-setting" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Master Setting</a></li>
-                    </ul>
-                </nav>
+    <!-- LOADING SCREEN -->
+    <div id="screen-loading" class="hidden fixed inset-0 z-40 bg-white flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p id="loading-text" class="text-gray-500 font-medium text-sm">Memuat sistem...</p>
+        <button onclick="forceEnterApp()" id="btn-force" class="hidden mt-6 px-6 py-2 bg-red-50 text-red-600 rounded-full text-xs font-bold border border-red-200 hover:bg-red-100">⚠️ Loading Lama? Klik Masuk Paksa</button>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="screen-app" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white border-b px-4 py-3 shadow-sm z-10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="font-bold text-blue-600 flex items-center gap-2"><i class="fas fa-chart-pie"></i> <span class="hidden md:inline">Keuanganku</span></div>
+            <div class="flex gap-2 text-xs font-medium bg-gray-100 p-1 rounded-lg overflow-x-auto w-full md:w-auto no-scrollbar">
+                <button onclick="setTab('view-beranda')" class="tab-btn px-3 py-1.5 rounded-md bg-white shadow text-blue-600 whitespace-nowrap" id="btn-view-beranda">Beranda</button>
+                <button onclick="setTab('view-bulanan')" class="tab-btn px-3 py-1.5 rounded-md text-gray-500 hover:text-gray-900 whitespace-nowrap" id="btn-view-bulanan">Bulanan</button>
+                <button onclick="setTab('view-tahunan')" class="tab-btn px-3 py-1.5 rounded-md text-gray-500 hover:text-gray-900 whitespace-nowrap" id="btn-view-tahunan">Tahunan</button>
+                <button onclick="setTab('view-budgeting')" class="tab-btn px-3 py-1.5 rounded-md text-gray-500 hover:text-gray-900 whitespace-nowrap" id="btn-view-budgeting">Budgeting</button>
+                <button onclick="setTab('view-anomali')" class="tab-btn px-3 py-1.5 rounded-md text-gray-500 hover:text-gray-900 whitespace-nowrap" id="btn-view-anomali">Anomali</button>
+                <button onclick="setTab('view-setting')" class="tab-btn px-3 py-1.5 rounded-md text-gray-500 hover:text-gray-900 whitespace-nowrap" id="btn-view-setting">Setting</button>
             </div>
-            <span id="user-id-display" class="text-xs text-gray-400 truncate" title="User ID"></span>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-8">
-            <!-- View: Beranda -->
-            <div id="view-beranda" class="view-content grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h2 class="text-xl font-semibold mb-5">Summary (Bulan Ini)</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="bg-green-50 p-5 rounded-xl border border-green-200"><div class="text-sm font-medium text-green-600">Pemasukan (Aktual)</div><div id="summary-income" class="text-2xl font-bold text-green-800 mt-1">IDR 0</div></div>
-                            <div class="bg-red-50 p-5 rounded-xl border border-red-200"><div class="text-sm font-medium text-red-600">Pengeluaran</div><div id="summary-expense" class="text-2xl font-bold text-red-800 mt-1">IDR 0</div></div>
-                            <div class="bg-blue-50 p-5 rounded-xl border border-blue-200"><div class="text-sm font-medium text-blue-600">Saldo Akhir</div><div id="summary-balance" class="text-2xl font-bold text-blue-800 mt-1">IDR 0</div></div>
-                        </div>
-                        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex justify-between items-center">
-                            <span class="text-sm font-medium text-yellow-800"><i class="fas fa-history mr-2"></i>Sisa Saldo Bulan Lalu:</span>
-                            <span id="summary-prev-balance" class="text-lg font-bold text-yellow-800">IDR 0</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <div class="flex justify-between items-center mb-5">
-                            <h2 class="text-xl font-semibold">Riwayat Transaksi</h2>
-                            <button id="open-excel-modal" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-green-600 hover:bg-green-700 transition-colors no-print"><i class="fas fa-file-excel"></i> <span>Download Excel</span></button>
-                        </div>
-                        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th><th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase w-20">Aksi</th></tr></thead><tbody id="transaction-list" class="bg-white divide-y divide-gray-200"></tbody></table></div>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-1">
-                    <div class="bg-white p-6 rounded-2xl shadow-lg sticky top-24 no-print">
-                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Tambah Transaksi</h2>
-                            <form id="transaction-form" class="space-y-4">
-                                <input type="hidden" id="tx-id">
-                                <div><label class="block text-sm font-medium text-gray-700">Tanggal</label><input type="date" id="date" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Jenis</label><select id="type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"><option value="pengeluaran">Pengeluaran</option><option value="pemasukan">Pemasukan</option></select></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Kategori</label><select id="category" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm" disabled><option value="">Pilih jenis dulu...</option></select></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Jumlah (IDR)</label><input type="number" id="amount" required min="0" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Keterangan</label><textarea id="description" rows="2" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></textarea></div>
-                                <div class="flex items-center" id="recurring-container"><input id="is-recurring" type="checkbox" class="h-4 w-4 text-blue-600 rounded"><label for="is-recurring" class="ml-2 block text-sm text-gray-900">Transaksi Berulang (Tiap Bulan)</label></div>
-                                <div class="flex gap-2"><button type="submit" id="btn-save-tx" class="flex-1 py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700">Simpan</button><button type="button" id="btn-cancel-edit" class="hidden px-4 py-3 rounded-lg text-gray-700 bg-gray-200">Batal</button></div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- View: Laporan Bulanan -->
-            <div id="view-laporan-bulanan" class="view-content hidden space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-lg printable-area">
-                    <div class="flex justify-between items-center mb-4 no-print"><h2 class="text-2xl font-bold pdf-hidden">Laporan Bulanan</h2><button id="download-monthly-pdf" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"><i class="fas fa-file-pdf"></i> <span>Download PDF</span></button></div>
-                    <div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"><div><label class="block text-sm font-medium text-gray-700">Bulan</label><select id="monthly-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium text-gray-700">Tahun</label><select id="monthly-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div>
-                    <div id="monthly-report-info-pdf" class="mb-4 hidden pdf-visible"></div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div class="bg-green-50 p-5 rounded-xl border border-green-200"><div class="text-sm font-medium text-green-600">Total Pemasukan</div><div id="monthly-report-income" class="text-2xl font-bold text-green-800 mt-1">IDR 0</div></div>
-                        <div class="bg-red-50 p-5 rounded-xl border border-red-200"><div class="text-sm font-medium text-red-600">Total Pengeluaran</div><div id="monthly-report-expense" class="text-2xl font-bold text-red-800 mt-1">IDR 0</div></div>
-                        <div class="bg-blue-50 p-5 rounded-xl border border-blue-200"><div class="text-sm font-medium text-blue-600">Saldo Akhir</div><div id="monthly-report-cashflow" class="text-2xl font-bold text-blue-800 mt-1">IDR 0</div></div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Arus Kas</h3><div style="height:200px"><canvas id="monthly-cashflow-chart"></canvas></div></div>
-                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Pemasukan</h3><div style="height:200px"><canvas id="monthly-income-chart"></canvas></div></div>
-                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Pengeluaran</h3><div style="height:200px"><canvas id="monthly-expense-chart"></canvas></div></div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div><h3 class="text-lg font-semibold mb-3 text-green-700">Rincian Pemasukan</h3><div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-green-50"><tr><th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th></tr></thead><tbody id="monthly-income-table-body" class="divide-y divide-gray-200 bg-white"></tbody></table></div></div>
-                        <div><h3 class="text-lg font-semibold mb-3 text-red-700">Rincian Pengeluaran</h3><div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-red-50"><tr><th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th></tr></thead><tbody id="monthly-expense-table-body" class="divide-y divide-gray-200 bg-white"></tbody></table></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- View: Laporan Tahunan -->
-            <div id="view-laporan-tahunan" class="view-content hidden"><div class="bg-white p-6 rounded-2xl shadow-lg printable-area"><div class="flex justify-between items-center mb-4 no-print"><h2 class="text-2xl font-bold pdf-hidden">Laporan Tahunan</h2><button id="download-annual-pdf" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"><i class="fas fa-file-pdf"></i> <span>Download PDF</span></button></div><h2 class="text-2xl font-bold mb-4 hidden pdf-visible">Laporan Tahunan</h2><div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"><div><label class="block text-sm font-medium text-gray-700">Mulai Bulan</label><select id="annual-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium text-gray-700">Mulai Tahun</label><select id="annual-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pemasukan 12 Bulan</h3><div style="height:200px"><canvas id="annual-income-chart"></canvas></div></div><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pengeluaran 12 Bulan</h3><div style="height:200px"><canvas id="annual-expense-chart"></canvas></div></div></div><div class="p-5 rounded-xl border border-gray-200 mb-8"><h3 class="text-lg font-semibold mb-3 text-center">Arus Kas 12 Bulan</h3><div style="height:200px"><canvas id="annual-cashflow-chart"></canvas></div></div><div class="space-y-8"><div><h3 class="text-xl font-semibold mb-3 text-blue-700">Overview</h3><div class="overflow-x-auto shadow rounded-lg"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-blue-600 text-white"><tr id="annual-overview-header"></tr></thead><tbody id="annual-overview-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div></div></div>
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
             
-            <!-- View: Anomali & Master Setting (Disembunyikan untuk ringkas, konten ada di script) -->
-            <div id="view-transaksi-anomali" class="view-content hidden"><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-2xl font-bold mb-4">Deteksi Transaksi Anomali</h2><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Kategori</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Keterangan</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500">Jumlah</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500">Rata-rata</th></tr></thead><tbody id="anomaly-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>
-            <div id="view-master-setting" class="view-content hidden space-y-8"><div class="bg-white p-6 rounded-2xl shadow-lg"><div class="flex justify-between items-center mb-6 no-print"><h2 class="text-2xl font-bold">Master Kategori</h2><button id="add-category-btn" class="py-2 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700">+ Tambah</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-lg font-semibold text-green-700 mb-3">Pemasukan</h3><ul id="master-pemasukan-list" class="divide-y divide-gray-200"></ul></div><div><h3 class="text-lg font-semibold text-red-700 mb-3">Pengeluaran</h3><ul id="master-pengeluaran-list" class="divide-y divide-gray-200"></ul></div></div></div><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-2xl font-bold mb-4">Master Transaksi Berulang</h2><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Tgl</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Jenis</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Kategori</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500">Jumlah</th><th class="px-6 py-3 text-center text-xs font-medium text-gray-500">Aksi</th></tr></thead><tbody id="recurring-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>
+            <!-- 1. BERANDA -->
+            <div id="view-beranda" class="view-section space-y-6 max-w-5xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-xl border shadow-sm"><p class="text-xs font-bold text-emerald-600 uppercase">Pemasukan</p><h3 id="val-in" class="text-2xl font-bold text-gray-800 mt-1">0</h3></div>
+                    <div class="bg-white p-4 rounded-xl border shadow-sm"><p class="text-xs font-bold text-rose-600 uppercase">Pengeluaran</p><h3 id="val-out" class="text-2xl font-bold text-gray-800 mt-1">0</h3></div>
+                    <div class="bg-white p-4 rounded-xl border shadow-sm"><p class="text-xs font-bold text-blue-600 uppercase">Saldo Akhir</p><h3 id="val-bal" class="text-2xl font-bold text-gray-800 mt-1">0</h3><p id="summary-prev-balance" class="text-[10px] text-gray-400 mt-1">*Termasuk sisa saldo lalu</p></div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white rounded-xl border shadow-sm flex flex-col h-[500px]">
+                        <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold text-gray-700">Transaksi Bulan Ini</h3><button onclick="exportExcel()" class="text-xs bg-green-50 text-green-600 px-3 py-1 rounded hover:bg-green-100"><i class="fas fa-file-excel"></i> Excel</button></div>
+                        <div class="flex-1 overflow-y-auto p-0"><table class="w-full text-sm text-left"><thead class="bg-gray-50 text-xs uppercase text-gray-500 sticky top-0"><tr><th class="px-4 py-3">Tgl</th><th class="px-4 py-3">Ket</th><th class="px-4 py-3 text-right">Jml</th><th class="px-4 py-3 text-center">Opsi</th></tr></thead><tbody id="list-tx" class="divide-y"></tbody></table></div>
+                    </div>
+                    <div class="lg:col-span-1 bg-white rounded-xl border shadow-sm p-5 h-fit">
+                        <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Input Data</h3>
+                        <form id="form-tx" class="space-y-3">
+                            <input type="hidden" id="inp-id">
+                            <div><label class="text-xs font-bold text-gray-500">Tanggal</label><input type="date" id="inp-date" required class="w-full p-2 border rounded text-sm"></div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div><label class="text-xs font-bold text-gray-500">Jenis</label><select id="inp-type" onchange="updateCats()" class="w-full p-2 border rounded text-sm"><option value="pengeluaran">Keluar</option><option value="pemasukan">Masuk</option></select></div>
+                                <div><label class="text-xs font-bold text-gray-500">Jumlah</label><input type="number" id="inp-amount" required class="w-full p-2 border rounded text-sm" oninput="checkBudgetStatus()"></div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-500">Kategori</label>
+                                <select id="inp-cat" required class="w-full p-2 border rounded text-sm" onchange="checkBudgetStatus()"></select>
+                            </div>
+                            <!-- Budget Info Box -->
+                            <div id="budget-info-box" class="hidden text-xs p-2 bg-gray-50 rounded border border-gray-200 space-y-1">
+                                <div class="flex justify-between"><span>Budget:</span> <span class="font-bold" id="info-budget-limit">0</span></div>
+                                <div class="flex justify-between"><span>Terpakai:</span> <span class="font-bold text-orange-600" id="info-budget-used">0</span></div>
+                                <div class="flex justify-between border-t pt-1 mt-1"><span>Sisa:</span> <span class="font-bold" id="info-budget-remain">0</span></div>
+                            </div>
+                            <div><label class="text-xs font-bold text-gray-500">Keterangan</label><textarea id="inp-desc" rows="2" class="w-full p-2 border rounded text-sm"></textarea></div>
+                            <div class="flex items-center gap-2 p-2 bg-blue-50 rounded"><input type="checkbox" id="inp-rec"><label for="inp-rec" class="text-xs text-blue-700 font-bold">Ulangi tiap bulan?</label></div>
+                            <div class="flex gap-2 pt-2"><button type="submit" id="btn-save" class="flex-1 bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">Simpan</button><button type="button" onclick="resetForm()" id="btn-cancel" class="hidden px-4 bg-gray-200 rounded text-gray-600">Batal</button></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. LAPORAN BULANAN -->
+            <div id="view-bulanan" class="view-section hidden space-y-6 max-w-5xl mx-auto printable-area">
+                <div class="flex justify-between items-center no-print bg-white p-4 rounded-xl border shadow-sm">
+                    <h2 class="font-bold text-gray-700">Laporan Bulanan</h2>
+                    <div class="flex gap-2"><select id="rep-month" onchange="renderReport()" class="border rounded px-2 py-1 text-sm"></select><select id="rep-year" onchange="renderReport()" class="border rounded px-2 py-1 text-sm"></select><button onclick="window.print()" class="bg-red-100 text-red-600 px-3 py-1 rounded text-sm font-bold">PDF</button></div>
+                </div>
+                <div class="hidden pdf-visible mb-4 text-center"><h2 class="text-2xl font-bold">Laporan Bulanan</h2><p id="pdf-period-text" class="text-gray-500"></p></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-xl border"><h4 class="text-center text-xs font-bold mb-2">Arus Kas</h4><div class="h-40"><canvas id="chart-cf"></canvas></div></div>
+                    <div class="bg-white p-4 rounded-xl border"><h4 class="text-center text-xs font-bold mb-2">Pemasukan</h4><div class="h-40"><canvas id="chart-in"></canvas></div></div>
+                    <div class="bg-white p-4 rounded-xl border"><h4 class="text-center text-xs font-bold mb-2">Pengeluaran</h4><div class="h-40"><canvas id="chart-out"></canvas></div></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-4 rounded-xl border"><h3 class="font-bold text-green-600 border-b pb-2 mb-2">Rincian Masuk</h3><table class="w-full text-sm"><tbody id="list-rep-in"></tbody></table></div>
+                    <div class="bg-white p-4 rounded-xl border"><h3 class="font-bold text-red-600 border-b pb-2 mb-2">Rincian Keluar</h3><table class="w-full text-sm"><tbody id="list-rep-out"></tbody></table></div>
+                </div>
+            </div>
+
+            <!-- 3. LAPORAN TAHUNAN -->
+            <div id="view-tahunan" class="view-section hidden space-y-6 max-w-5xl mx-auto printable-area">
+                <div class="flex justify-between items-center no-print bg-white p-4 rounded-xl border shadow-sm">
+                    <h2 class="font-bold text-gray-700">Laporan Tahunan</h2>
+                    <div class="flex gap-2"><select id="ann-year" onchange="renderAnnual()" class="border rounded px-2 py-1 text-sm"></select><button onclick="window.print()" class="bg-red-100 text-red-600 px-3 py-1 rounded text-sm font-bold">PDF</button></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border"><h4 class="text-center text-xs font-bold mb-2">Grafik 12 Bulan</h4><div class="h-64"><canvas id="chart-annual"></canvas></div></div>
+                <div class="bg-white p-4 rounded-xl border overflow-x-auto"><table class="w-full text-sm text-left border-collapse"><thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="p-2 border">Bulan</th><th class="p-2 border text-right">Pemasukan</th><th class="p-2 border text-right">Pengeluaran</th><th class="p-2 border text-right">Sisa</th></tr></thead><tbody id="list-annual"></tbody></table></div>
+            </div>
+
+            <!-- 4. BUDGETING (NEW FEATURE) -->
+            <div id="view-budgeting" class="view-section hidden space-y-6 max-w-5xl mx-auto">
+                <div class="bg-white p-6 rounded-xl border shadow-sm">
+                    <h2 class="font-bold text-gray-700 mb-4 border-b pb-2">Perencanaan Budget Bulanan</h2>
+                    <p class="text-xs text-gray-500 mb-4">Bandingkan rata-rata pengeluaran 3 bulan terakhir dengan rencana budget Anda.</p>
+                    
+                    <!-- Budget Summary -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="p-3 bg-blue-50 rounded border border-blue-100">
+                            <p class="text-xs text-blue-600 font-bold">Rata-rata Pemasukan (3 Bln)</p>
+                            <h3 id="bud-avg-inc" class="text-lg font-bold">0</h3>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded border border-orange-100">
+                            <p class="text-xs text-orange-600 font-bold">Total Rencana Budget</p>
+                            <h3 id="bud-total-plan" class="text-lg font-bold">0</h3>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded border border-gray-200">
+                            <p class="text-xs text-gray-600 font-bold">Estimasi Sisa (Surplus/Defisit)</p>
+                            <h3 id="bud-est-bal" class="text-lg font-bold">0</h3>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                                <tr>
+                                    <th class="p-3">Kategori Pengeluaran</th>
+                                    <th class="p-3 text-right">Rata2 (3 Bln)</th>
+                                    <th class="p-3 text-right">Budget Anda</th>
+                                    <th class="p-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="list-budget" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. ANOMALI -->
+            <div id="view-anomali" class="view-section hidden space-y-6 max-w-5xl mx-auto">
+                 <div class="bg-white p-6 rounded-xl border shadow-sm">
+                    <h2 class="font-bold text-gray-700 mb-2">Deteksi Anomali</h2>
+                    <p class="text-xs text-gray-500 mb-4">Transaksi pengeluaran yang > 3x rata-rata atau melebihi Budget.</p>
+                    <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-50 text-xs uppercase"><tr><th class="p-2">Tgl</th><th class="p-2">Ket</th><th class="p-2 text-right">Jml</th><th class="p-2 text-right">Budget</th><th class="p-2 text-right">Status</th></tr></thead><tbody id="list-anomali"></tbody></table></div>
+                 </div>
+            </div>
+
+            <!-- 6. SETTING -->
+            <div id="view-setting" class="view-section hidden space-y-6 max-w-5xl mx-auto">
+                <div class="bg-white p-6 rounded-xl border shadow-sm">
+                    <div class="flex justify-between items-center mb-4"><h2 class="font-bold text-gray-700">Kategori</h2><button onclick="addCat()" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ Tambah</button></div>
+                    <div class="grid grid-cols-2 gap-6 text-sm">
+                        <div><h4 class="font-bold text-green-600 mb-2">Pemasukan</h4><ul id="set-list-in" class="space-y-1"></ul></div>
+                        <div><h4 class="font-bold text-red-600 mb-2">Pengeluaran</h4><ul id="set-list-out" class="space-y-1"></ul></div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl border shadow-sm mt-6">
+                    <h2 class="font-bold text-gray-700 mb-4">Transaksi Otomatis</h2>
+                    <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-50 text-xs uppercase"><tr><th class="p-2">Tgl</th><th class="p-2">Nama</th><th class="p-2 text-right">Jml</th><th class="p-2 text-center">Opsi</th></tr></thead><tbody id="set-list-rec"></tbody></table></div>
+                </div>
+            </div>
+
         </main>
+        <footer class="bg-white border-t py-2 text-center text-xs text-gray-400" id="status-text">Mode Offline</footer>
     </div>
 
-    <!-- Modals -->
-    <div id="status-modal" class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-xl transition-all translate-y-16 opacity-0 hidden no-print"><p id="status-message"></p></div>
-    <div id="category-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 id="category-modal-title" class="text-xl font-semibold mb-6">Tambah Kategori</h3><form id="category-modal-form"><input type="hidden" id="category-modal-id"><div class="space-y-4"><div><label class="block text-sm font-medium">Nama</label><input type="text" id="category-modal-name" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></div><div><label class="block text-sm font-medium">Jenis</label><select id="category-modal-type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"><option value="pemasukan">Pemasukan</option><option value="pengeluaran">Pengeluaran</option></select></div></div><div class="flex justify-end space-x-3 mt-8"><button type="button" id="category-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100">Batal</button><button type="submit" class="py-2 px-4 rounded-lg text-white bg-blue-600">Simpan</button></div></form></div></div>
-    <div id="excel-download-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 class="text-xl font-semibold mb-6">Download Excel</h3><div class="space-y-4"><div><label class="block text-sm font-medium">Bulan</label><select id="excel-month-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium">Tahun</label><select id="excel-year-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div><div class="flex justify-end space-x-3 mt-8"><button type="button" id="excel-download-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100">Batal</button><button type="button" id="download-excel-confirm" class="py-2 px-4 rounded-lg text-white bg-green-600">Download</button></div></div></div>
-    <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 class="text-xl font-semibold mb-4">Hapus Data?</h3><div class="flex justify-end space-x-3 mt-6"><button type="button" id="delete-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100">Batal</button><button type="button" id="delete-modal-confirm" class="py-2 px-4 rounded-lg text-white bg-red-600">Hapus</button></div></div></div>
+    <!-- MODALS & TOAST -->
+    <div id="modal-category" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden"><div class="bg-white w-full max-w-xs p-6 rounded-2xl shadow-2xl"><h3 class="font-bold text-lg mb-4">Kategori Baru</h3><form id="form-category" class="space-y-3"><input type="text" id="cat-name" placeholder="Nama" required class="w-full p-2 border rounded text-sm"><select id="cat-type" class="w-full p-2 border rounded text-sm"><option value="pengeluaran">Pengeluaran</option><option value="pemasukan">Pemasukan</option></select><div class="flex justify-end gap-2 mt-4"><button type="button" onclick="hideModal('modal-category')" class="px-4 py-2 text-sm bg-gray-100 rounded">Batal</button><button type="submit" class="px-4 py-2 text-sm bg-blue-600 text-white rounded">Simpan</button></div></form></div></div>
+    <div id="status-modal" class="fixed bottom-5 right-5 z-50 hidden transition-all transform duration-300"><div id="status-content" class="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg text-sm font-medium"></div></div>
 
-    <!-- SCRIPT -->
-    <script type="module">
-        const SUPABASE_URL = 'https://azgkrncmbalimhwickmm.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_0JKn3axQn0QEqSGsgtCg1Q_Bi-QCYM2';
+    <script>
+        // CONFIG
+        const SB_URL = 'https://azgkrncmbalimhwickmm.supabase.co'; 
+        const SB_KEY = 'sb_publishable_0JKn3axQn0QEqSGsgtCg1Q_Bi-QCYM2'; 
+        const OFFLINE_UUID = '00000000-0000-0000-0000-000000000000';
+        const MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
-        // SAFE JS LOADING
-        let jsPDF = window.jspdf ? window.jspdf.jsPDF : null;
-        const { createClient } = supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true } });
-
-        let userId, categoriesData = { pemasukan: [], pengeluaran: [] }, allTransactions = [], charts = {}, deleteTarget = null;
-        const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-
-        // UTILS
-        function formatCurrency(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
-        function showStatus(msg, err=false) {
-            const el = document.getElementById('status-modal'); document.getElementById('status-message').textContent = msg;
-            el.classList.remove('hidden', 'bg-gray-800', 'bg-red-600', 'translate-y-16', 'opacity-0');
-            el.classList.add(err ? 'bg-red-600' : 'bg-gray-800', 'translate-y-0', 'opacity-100');
-            setTimeout(() => { el.classList.add('translate-y-16', 'opacity-0'); setTimeout(() => el.classList.add('hidden'), 300); }, 3000);
-        }
-        function showModal(id) { document.getElementById('modal-backdrop').classList.remove('hidden'); document.getElementById(id).classList.remove('hidden'); }
-        function hideModal(id) { document.getElementById('modal-backdrop').classList.add('hidden'); document.getElementById(id).classList.add('hidden'); }
-
-        // INIT FILTERS
-        function initFilters() {
-            const now = new Date();
-            const populate = (m, y) => {
-                m.innerHTML = ''; y.innerHTML = '';
-                MONTH_NAMES.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; m.appendChild(o); });
-                [now.getFullYear(), now.getFullYear()-1, now.getFullYear()-2].forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; y.appendChild(o); });
-                m.value = now.getMonth(); y.value = now.getFullYear();
-            };
-            populate(document.getElementById('monthly-report-month'), document.getElementById('monthly-report-year'));
-            populate(document.getElementById('annual-report-month'), document.getElementById('annual-report-year'));
-            populate(document.getElementById('excel-month-select'), document.getElementById('excel-year-select'));
-            document.getElementById('annual-report-month').value = 0;
-        }
-
-        // MAIN LOAD
-        async function loadData() {
-            try {
-                await Promise.all([loadCategories(), loadTransactions(), loadRecurring()]);
-                renderDashboard();
-            } catch (error) {
-                alert("Gagal memuat data. Cek koneksi atau tabel database: " + error.message);
+        // LOCAL DB
+        const Local = {
+            get: (k) => JSON.parse(localStorage.getItem('app_v5_'+k)) || [],
+            set: (k,v) => localStorage.setItem('app_v5_'+k, JSON.stringify(v)),
+            op: async (act, table, payload, id) => {
+                let d = Local.get(table);
+                if(act==='select') return d.filter(x => !payload || x.user_id === payload);
+                if(act==='insert') { d.push({...payload, id:Date.now()}); Local.set(table, d); return; }
+                if(act==='update') { d = d.map(x => x.id==id ? {...x, ...payload} : x); Local.set(table, d); return; }
+                if(act==='delete') { d = d.filter(x => x.id!=id); Local.set(table, d); return; }
             }
-        }
-
-        async function loadCategories() {
-            const { data, error } = await db.from('categories').select('*').eq('user_id', userId);
-            if(error) throw error;
-            categoriesData.pemasukan = data.filter(c => c.type === 'pemasukan');
-            categoriesData.pengeluaran = data.filter(c => c.type === 'pengeluaran');
-            if(data.length === 0) await initDefaultCategories();
-            updateCategoryOptions();
-            renderMasterSettings();
-        }
-        async function loadTransactions() {
-            const { data, error } = await db.from('transactions').select('*').eq('user_id', userId);
-            if(error) throw error;
-            allTransactions = data || [];
-        }
-        async function loadRecurring() {
-            // Try-catch specific for recurring to avoid crash if table missing
-            try {
-                const { data, error } = await db.from('recurring_transactions').select('*').eq('user_id', userId);
-                if(!error) {
-                    renderRecurringList(data || []);
-                    checkAndGenerateRecurring(data || []);
-                }
-            } catch (e) { console.log("Recurring table missing/error, skipping feature."); }
-        }
-
-        async function initDefaultCategories() {
-            const defaults = [
-                { name: "Gaji", type: "pemasukan" }, { name: "Bonus", type: "pemasukan" },
-                { name: "Asuransi", type: "pengeluaran" }, { name: "Belanja Harian", type: "pengeluaran" },
-                { name: "Cicilan", type: "pengeluaran" }, { name: "Hiburan", type: "pengeluaran" },
-                { name: "Kesehatan", type: "pengeluaran" }, { name: "Lain-lain", type: "pengeluaran" },
-                { name: "Listrik/Air", type: "pengeluaran" }, { name: "Makan Minum", type: "pengeluaran" },
-                { name: "Pendidikan", type: "pengeluaran" }, { name: "Transportasi", type: "pengeluaran" }
-            ].map(c => ({...c, user_id: userId}));
-            await db.from('categories').insert(defaults);
-            await loadCategories();
-        }
-
-        // RECURRING LOGIC
-        async function checkAndGenerateRecurring(rules) {
-            const now = new Date();
-            const today = now.getDate();
-            let newTx = [], updatedIds = [];
-
-            rules.forEach(r => {
-                let last = r.last_generated ? new Date(r.last_generated) : null;
-                const isDone = last && last.getMonth() === now.getMonth() && last.getFullYear() === now.getFullYear();
-                if (!isDone && today >= r.day_of_month) {
-                    newTx.push({
-                        date: new Date().toISOString().split('T')[0], type: r.type, category: r.category,
-                        amount: r.amount, description: (r.description||'') + " (Otomatis)", user_id: userId
-                    });
-                    updatedIds.push(r.id);
-                }
-            });
-
-            if (newTx.length > 0) {
-                await db.from('transactions').insert(newTx);
-                const todayStr = new Date().toISOString().split('T')[0];
-                for(let id of updatedIds) await db.from('recurring_transactions').update({ last_generated: todayStr }).eq('id', id);
-                await loadTransactions();
-                renderDashboard();
-                showStatus(newTx.length + " Transaksi rutin dibuat.");
-            }
-        }
-
-        // RENDERERS
-        function renderDashboard() {
-            const now = new Date();
-            const cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
-            let openBal = 0, inc = 0, exp = 0;
-
-            allTransactions.forEach(t => {
-                if (new Date(t.date) < cutoff) openBal += (t.type === 'pemasukan' ? t.amount : -t.amount);
-            });
-
-            const curTx = allTransactions.filter(t => {
-                const d = new Date(t.date);
-                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            }).sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            const list = document.getElementById('transaction-list');
-            list.innerHTML = '';
-
-            if (openBal !== 0) {
-                const cls = openBal >= 0 ? 'text-yellow-700 bg-yellow-50' : 'text-red-700 bg-red-50';
-                list.innerHTML += `<tr class="${cls} border-b font-bold"><td class="px-6 py-3">1 ${MONTH_NAMES[now.getMonth()]}</td><td class="px-6 py-3">SALDO AWAL</td><td class="px-6 py-3 italic">Sisa bulan lalu</td><td class="px-6 py-3 text-right">${formatCurrency(openBal)}</td><td></td></tr>`;
-            }
-
-            if(curTx.length === 0 && openBal === 0) {
-                list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data bulan ini</td></tr>';
-            } else {
-                curTx.forEach(t => {
-                    if(t.type === 'pemasukan') inc += t.amount; else exp += t.amount;
-                    list.innerHTML += `<tr class="border-b hover:bg-gray-50 ${t.type === 'pemasukan' ? 'bg-green-50' : 'bg-red-50'}">
-                        <td class="px-6 py-3 text-sm">${new Date(t.date).toLocaleDateString('id-ID')}</td>
-                        <td class="px-6 py-3 text-sm font-medium">${t.category}</td>
-                        <td class="px-6 py-3 text-sm text-gray-500 truncate max-w-xs">${t.description || '-'}</td>
-                        <td class="px-6 py-3 text-right text-sm font-bold ${t.type === 'pemasukan' ? 'text-green-600' : 'text-red-600'}">${formatCurrency(t.amount)}</td>
-                        <td class="px-6 py-3 text-center">
-                            <button onclick="window.editTx(${t.id})" class="text-blue-500 mr-2"><i class="fas fa-pen"></i></button>
-                            <button onclick="window.delData('transaction', ${t.id})" class="text-red-500"><i class="fas fa-trash"></i></button>
-                        </td></tr>`;
-                });
-            }
-
-            document.getElementById('summary-income').textContent = formatCurrency(inc);
-            document.getElementById('summary-expense').textContent = formatCurrency(exp);
-            document.getElementById('summary-prev-balance').textContent = formatCurrency(openBal);
-            document.getElementById('summary-balance').textContent = formatCurrency(openBal + inc - exp);
-        }
-
-        function renderMonthlyReport() {
-            const mIdx = document.getElementById('monthly-report-month').value;
-            const y = document.getElementById('monthly-report-year').value;
-            
-            const cutoff = new Date(y, mIdx, 1);
-            let openBal = 0, inc = 0, exp = 0;
-            const incCat = {}, expCat = {};
-
-            allTransactions.forEach(t => {
-                const d = new Date(t.date);
-                if (d < cutoff) openBal += (t.type === 'pemasukan' ? t.amount : -t.amount);
-                else if (d.getMonth() == mIdx && d.getFullYear() == y) {
-                    if(t.type === 'pemasukan') {
-                        inc += t.amount; incCat[t.category] = (incCat[t.category] || 0) + t.amount;
-                    } else {
-                        exp += t.amount; expCat[t.category] = (expCat[t.category] || 0) + t.amount;
-                    }
-                }
-            });
-
-            // Chart Helpers
-            const destroy = (id) => { if(charts[id]) charts[id].destroy(); };
-            const drawDoughnut = (id, data) => {
-                destroy(id);
-                const labels = Object.keys(data);
-                const values = Object.values(data);
-                const isEmpty = labels.length === 0;
-                charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: isEmpty ? ['Data Kosong'] : labels,
-                        datasets: [{ data: isEmpty ? [1] : values, backgroundColor: isEmpty ? ['#e5e7eb'] : labels.map((_,i)=>`hsl(${i*137.5%360},70%,60%)`) }]
-                    },
-                    options: { plugins: { legend: { position: 'bottom' }, tooltip: { enabled: !isEmpty } }, maintainAspectRatio: false }
-                });
-            };
-
-            drawDoughnut('monthly-income-chart', incCat);
-            drawDoughnut('monthly-expense-chart', expCat);
-
-            destroy('monthly-cashflow-chart');
-            charts['monthly-cashflow-chart'] = new Chart(document.getElementById('monthly-cashflow-chart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Dana'],
-                    datasets: [
-                        { label: 'Saldo Awal', data: [openBal], backgroundColor: '#eab308' },
-                        { label: 'Pemasukan', data: [inc], backgroundColor: '#22c55e' },
-                        { label: 'Pengeluaran', data: [exp], backgroundColor: '#ef4444' }
-                    ]
-                },
-                options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
-            });
-
-            // Tables
-            const fillTable = (id, data) => {
-                const el = document.getElementById(id);
-                el.innerHTML = Object.keys(data).length === 0 
-                    ? '<tr><td colspan="2" class="p-3 text-center text-gray-400">Tidak ada data</td></tr>'
-                    : Object.entries(data).map(([k,v]) => `<tr><td class="p-2 border-b text-sm">${k}</td><td class="p-2 border-b text-right font-bold text-sm">${formatCurrency(v)}</td></tr>`).join('');
-            };
-            fillTable('monthly-income-table-body', incCat);
-            fillTable('monthly-expense-table-body', expCat);
-
-            document.getElementById('monthly-report-income').textContent = formatCurrency(inc);
-            document.getElementById('monthly-report-expense').textContent = formatCurrency(exp);
-            document.getElementById('monthly-report-cashflow').textContent = formatCurrency(openBal + inc - exp);
-        }
-
-        // ACTIONS & HELPERS
-        window.editTx = (id) => {
-            const t = allTransactions.find(x => x.id === id);
-            if(!t) return;
-            document.getElementById('date').value = t.date;
-            document.getElementById('type').value = t.type;
-            updateCategoryOptions();
-            document.getElementById('category').value = t.category;
-            document.getElementById('amount').value = t.amount;
-            document.getElementById('description').value = t.description.replace(" (Otomatis)", "");
-            document.getElementById('tx-id').value = id;
-            
-            const btn = document.getElementById('btn-save-tx');
-            btn.textContent = "Update"; btn.classList.replace('bg-blue-600', 'bg-yellow-600');
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            document.getElementById('recurring-container').classList.add('hidden');
-            document.getElementById('transaction-form').scrollIntoView();
         };
 
-        window.delData = (type, id) => { deleteTarget = { type, id }; showModal('delete-modal'); };
-        window.openCategoryModal = (mode, id) => {
-            document.getElementById('category-modal-form').reset();
-            document.getElementById('category-modal-id').value = id || "";
-            if(mode === 'edit') {
-                const c = [...categoriesData.pemasukan, ...categoriesData.pengeluaran].find(x => x.id == id);
-                if(c) { document.getElementById('category-modal-name').value = c.name; document.getElementById('category-modal-type').value = c.type; }
-            }
-            showModal('category-modal');
-        };
+        let db, userId, isOnline = false;
+        let data = { tx: [], cat: [], rec: [] };
+        let charts = {};
 
-        function updateCategoryOptions() {
-            const t = document.getElementById('type').value;
-            const s = document.getElementById('category');
-            s.innerHTML = '';
-            (categoriesData[t]||[]).forEach(c => { const o = document.createElement('option'); o.value = c.name; o.textContent = c.name; s.appendChild(o); });
-            s.disabled = s.options.length === 0;
-        }
-
-        function renderMasterSettings() {
-            const makeList = (data, el) => {
-                el.innerHTML = data.map(c => `<li class="flex justify-between py-2 text-sm border-b border-gray-100"><span>${c.name}</span><div><button onclick="window.openCategoryModal('edit',${c.id})" class="text-blue-500 mr-2">Edit</button><button onclick="window.delData('category',${c.id})" class="text-red-500">Hapus</button></div></li>`).join('');
-            };
-            makeList(categoriesData.pemasukan, document.getElementById('master-pemasukan-list'));
-            makeList(categoriesData.pengeluaran, document.getElementById('master-pengeluaran-list'));
-        }
-
-        function renderRecurringList(data) {
-            const el = document.getElementById('recurring-list');
-            if(!data.length) { el.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">Kosong</td></tr>'; return; }
-            el.innerHTML = data.map(r => `<tr class="border-b"><td class="p-3 text-sm">Tgl ${r.day_of_month}</td><td class="p-3 text-sm capitalize">${r.type}</td><td class="p-3 text-sm">${r.category}</td><td class="p-3 text-sm">${r.description||'-'}</td><td class="p-3 text-sm text-right font-bold">${formatCurrency(r.amount)}</td><td class="p-3 text-center"><button onclick="window.delData('recurring',${r.id})" class="text-red-500"><i class="fas fa-trash"></i></button></td></tr>`).join('');
-        }
-
-        // EVENT LISTENERS
-        document.getElementById('login-form').addEventListener('submit', async e => {
+        // --- INIT ---
+        document.getElementById('login-form').addEventListener('submit', e => {
             e.preventDefault();
             if(document.getElementById('password').value !== 'alfinrho$') return document.getElementById('login-error').classList.remove('hidden');
-            
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('main-app-content').classList.remove('hidden');
-            
-            // Auth Logic
-            let { data: { user } } = await db.auth.getUser();
-            if(!user) {
-                const email = `user${Date.now()}@demo.com`;
-                const { data: up, error } = await db.auth.signUp({ email, password: 'password123' });
-                if(error) return alert("Gagal Login DB: " + error.message);
-                user = up.user;
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-loading').classList.remove('hidden');
+            setTimeout(() => document.getElementById('btn-force').classList.remove('hidden'), 3000);
+            startApp();
+        });
+
+        window.forceEnterApp = () => startApp(true);
+
+        async function startApp(forceOffline = false) {
+            if (forceOffline || !SB_KEY.startsWith('ey')) {
+                initOffline();
+            } else {
+                try {
+                    const sb = supabase.createClient(SB_URL, SB_KEY);
+                    await Promise.race([sb.from('categories').select('count', { count: 'exact', head: true }), new Promise((_, r) => setTimeout(() => r("Timeout"), 5000))]);
+                    db = sb; isOnline = true;
+                    const {data} = await sb.auth.signUp({email:`user${Date.now()}@demo.com`, password:'password123'});
+                    userId = data.user?.id || 'user_offline';
+                    document.getElementById('status-text').innerHTML = '<span class="text-green-500">●</span> Online';
+                } catch (e) { initOffline(); }
             }
-            userId = user.id;
-            document.getElementById('user-id-display').textContent = "ID: " + userId.substring(0,8);
-            
-            initFilters(); // Init UI First
-            loadData();    // Load Data Async
-        });
-
-        document.getElementById('transaction-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            if(!userId) return alert("Sesi habis");
-            const btn = document.getElementById('btn-save-tx');
-            btn.textContent = "Proses..."; btn.disabled = true;
-
-            try {
-                const id = document.getElementById('tx-id').value;
-                const payload = {
-                    date: document.getElementById('date').value,
-                    type: document.getElementById('type').value,
-                    category: document.getElementById('category').value,
-                    amount: document.getElementById('amount').value,
-                    description: document.getElementById('description').value,
-                    user_id: userId
-                };
-
-                if(id) {
-                    await db.from('transactions').update(payload).eq('id', id);
-                    window.cancelEdit();
-                } else {
-                    await db.from('transactions').insert([payload]);
-                    if(document.getElementById('is-recurring').checked) {
-                        const rule = { ...payload, day_of_month: new Date(payload.date).getDate(), last_generated: payload.date };
-                        delete rule.date; 
-                        // Safe check if table exists
-                        try { await db.from('recurring_transactions').insert([rule]); } catch(e){}
-                    }
-                    document.getElementById('transaction-form').reset();
-                    document.getElementById('date').valueAsDate = new Date();
-                }
-                await loadTransactions();
-                if(document.getElementById('is-recurring').checked) await loadRecurring();
-                renderDashboard();
-                showStatus("Berhasil disimpan");
-            } catch (err) { alert("Gagal: " + err.message); }
-            finally { btn.textContent = "Simpan"; btn.disabled = false; }
-        });
-
-        document.getElementById('btn-cancel-edit').addEventListener('click', window.cancelEdit);
-        window.cancelEdit = () => {
-            document.getElementById('transaction-form').reset();
-            document.getElementById('date').valueAsDate = new Date();
-            document.getElementById('tx-id').value = "";
-            const btn = document.getElementById('btn-save-tx');
-            btn.textContent = "Simpan"; btn.classList.replace('bg-yellow-600', 'bg-blue-600');
-            document.getElementById('btn-cancel-edit').classList.add('hidden');
-            document.getElementById('recurring-container').classList.remove('hidden');
-            updateCategoryOptions();
-        };
-
-        document.getElementById('type').addEventListener('change', updateCategoryOptions);
-
-        // Delete Logic
-        document.getElementById('delete-modal-confirm').addEventListener('click', async () => {
-            if(!deleteTarget) return;
-            const { type, id } = deleteTarget;
-            const table = type === 'transaction' ? 'transactions' : type === 'category' ? 'categories' : 'recurring_transactions';
-            await db.from(table).delete().eq('id', id);
-            hideModal('delete-modal');
-            if(type === 'transaction') { await loadTransactions(); renderDashboard(); }
-            else if(type === 'category') { await loadCategories(); }
-            else { await loadRecurring(); }
-        });
-        document.getElementById('delete-modal-cancel').addEventListener('click', () => hideModal('delete-modal'));
-
-        // Category Modal
-        document.getElementById('category-modal-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            const name = document.getElementById('category-modal-name').value;
-            const type = document.getElementById('category-modal-type').value;
-            const id = document.getElementById('category-modal-id').value;
-            const payload = { name, type, user_id: userId };
-            
-            if(id) await db.from('categories').update(payload).eq('id', id);
-            else await db.from('categories').insert([payload]);
-            
-            hideModal('category-modal');
-            await loadCategories();
-        });
-        document.getElementById('category-modal-cancel').addEventListener('click', () => hideModal('category-modal'));
-        document.getElementById('add-category-btn').addEventListener('click', () => window.openCategoryModal('add'));
-
-        // Navigation
-        document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', e => {
-            e.preventDefault();
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('bg-gray-100', 'text-blue-600'));
-            l.classList.add('bg-gray-100', 'text-blue-600');
-            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
-            document.getElementById(l.dataset.view).classList.remove('hidden');
-            
-            if(l.dataset.view === 'view-laporan-bulanan') renderMonthlyReport();
-            // Add other render calls if needed
-        }));
-
-        // Report Filters Change
-        ['monthly-report-month', 'monthly-report-year'].forEach(id => 
-            document.getElementById(id).addEventListener('change', renderMonthlyReport)
-        );
-
-        // PDF & Excel
-        document.getElementById('download-monthly-pdf').addEventListener('click', () => {
-            if(!jsPDF) jsPDF = window.jspdf.jsPDF; // Lazy load check
-            const el = document.querySelector('#view-laporan-bulanan .printable-area');
-            // Temp show charts for PDF
-            html2canvas(el).then(c => {
-                const pdf = new jsPDF('l', 'mm', 'a4');
-                pdf.addImage(c.toDataURL('image/png'), 'PNG', 10, 10, 280, 0);
-                pdf.save('Laporan_Bulanan.pdf');
-            });
-        });
-
-        // Init
-        document.getElementById('date').valueAsDate = new Date();
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="id" class="h-full bg-gray-100">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencatat Keuangan Pribadi</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Library PDF & Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    <!-- Supabase Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        html { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
-        input[type='number']::-webkit-outer-spin-button, input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type='number'] { -moz-appearance: textfield; }
-        
-        /* CSS PDF */
-        body.is-printing-pdf .printable-area { font-size: 10px; background: white; padding: 20px; }
-        body.is-printing-pdf .printable-area h2 { font-size: 1.25rem; line-height: 1.75rem; }
-        body.is-printing-pdf .printable-area h3 { font-size: 1rem; line-height: 1.5rem; }
-        body.is-printing-pdf .printable-area th, body.is-printing-pdf .printable-area td { padding: 4px 6px !important; font-size: 8px !important; }
-        body.is-printing-pdf .no-print { display: none !important; }
-        body.is-printing-pdf .printable-area h2.pdf-hidden { display: none !important; }
-        body.is-printing-pdf .printable-area h2.pdf-visible { display: block !important; }
-    </style>
-</head>
-
-<body class="h-full bg-gray-100">
-    <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden no-print"></div>
-
-    <!-- Overlay Login -->
-    <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 p-4 no-print">
-        <div class="w-full max-w-sm p-8 bg-white rounded-2xl shadow-xl">
-            <h2 class="text-3xl font-bold text-center text-gray-800">Hai Alfin Rho</h2>
-            <p class="mt-2 text-center text-gray-500">Masukkan password untuk akses</p>
-            <form id="login-form" class="mt-8 space-y-6">
-                <div>
-                    <input id="password" name="password" type="password" required class="w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Password">
-                </div>
-                <p id="login-error" class="text-sm text-red-600 text-center hidden">Password salah.</p>
-                <button type="submit" class="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 transition-colors">Login</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Main App -->
-    <div id="main-app-content" class="hidden h-full flex flex-col">
-        <header class="bg-white shadow-md w-full p-4 flex justify-between items-center z-10 sticky top-0 no-print">
-            <div class="flex items-baseline space-x-6">
-                <h1 class="text-2xl font-bold text-blue-700">Keuanganku</h1>
-                <nav>
-                    <ul class="flex space-x-1">
-                        <li><a href="#" data-view="view-beranda" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100 bg-gray-100 text-blue-600">Beranda</a></li>
-                        <li><a href="#" data-view="view-laporan-bulanan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Laporan Bulanan</a></li>
-                        <li><a href="#" data-view="view-laporan-tahunan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Laporan Tahunan</a></li>
-                        <li><a href="#" data-view="view-transaksi-anomali" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Anomali</a></li>
-                        <li><a href="#" data-view="view-master-setting" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Master Setting</a></li>
-                    </ul>
-                </nav>
-            </div>
-            <span id="user-id-display" class="text-xs text-gray-400 truncate" title="User ID"></span>
-        </header>
-
-        <main class="flex-1 overflow-y-auto p-8">
-            <!-- View: Beranda -->
-            <div id="view-beranda" class="view-content grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h2 class="text-xl font-semibold mb-5">Summary (Bulan Ini)</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="bg-green-50 p-5 rounded-xl border border-green-200"><div class="text-sm font-medium text-green-600">Pemasukan (Aktual)</div><div id="summary-income" class="text-2xl font-bold text-green-800 mt-1">IDR 0</div></div>
-                            <div class="bg-red-50 p-5 rounded-xl border border-red-200"><div class="text-sm font-medium text-red-600">Pengeluaran</div><div id="summary-expense" class="text-2xl font-bold text-red-800 mt-1">IDR 0</div></div>
-                            <div class="bg-blue-50 p-5 rounded-xl border border-blue-200"><div class="text-sm font-medium text-blue-600">Saldo Akhir</div><div id="summary-balance" class="text-2xl font-bold text-blue-800 mt-1">IDR 0</div></div>
-                        </div>
-                        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex justify-between items-center">
-                            <span class="text-sm font-medium text-yellow-800"><i class="fas fa-history mr-2"></i>Sisa Saldo Bulan Lalu:</span>
-                            <span id="summary-prev-balance" class="text-lg font-bold text-yellow-800">IDR 0</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <div class="flex justify-between items-center mb-5">
-                            <h2 class="text-xl font-semibold">Riwayat Transaksi</h2>
-                            <button id="open-excel-modal" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-green-600 hover:bg-green-700 transition-colors no-print"><i class="fas fa-file-excel"></i> <span>Download Excel</span></button>
-                        </div>
-                        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th><th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase w-20">Aksi</th></tr></thead><tbody id="transaction-list" class="bg-white divide-y divide-gray-200"></tbody></table></div>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-1">
-                    <div class="bg-white p-6 rounded-2xl shadow-lg sticky top-24 no-print">
-                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Tambah Transaksi</h2>
-                            <form id="transaction-form" class="space-y-4">
-                                <input type="hidden" id="tx-id">
-                                <div><label class="block text-sm font-medium text-gray-700">Tanggal</label><input type="date" id="date" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Jenis</label><select id="type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"><option value="pengeluaran">Pengeluaran</option><option value="pemasukan">Pemasukan</option></select></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Kategori</label><select id="category" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm" disabled><option value="">Pilih jenis dulu...</option></select></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Jumlah (IDR)</label><input type="number" id="amount" required min="0" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Keterangan</label><textarea id="description" rows="2" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></textarea></div>
-                                <div class="flex items-center" id="recurring-container"><input id="is-recurring" type="checkbox" class="h-4 w-4 text-blue-600 rounded"><label for="is-recurring" class="ml-2 block text-sm text-gray-900">Transaksi Berulang (Tiap Bulan)</label></div>
-                                <div class="flex gap-2"><button type="submit" id="btn-save-tx" class="flex-1 py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700">Simpan</button><button type="button" id="btn-cancel-edit" class="hidden px-4 py-3 rounded-lg text-gray-700 bg-gray-200">Batal</button></div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- View: Laporan Bulanan -->
-            <div id="view-laporan-bulanan" class="view-content hidden space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-lg printable-area">
-                    <div class="flex justify-between items-center mb-4 no-print"><h2 class="text-2xl font-bold pdf-hidden">Laporan Bulanan</h2><button id="download-monthly-pdf" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"><i class="fas fa-file-pdf"></i> <span>Download PDF</span></button></div>
-                    <div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"><div><label class="block text-sm font-medium text-gray-700">Bulan</label><select id="monthly-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium text-gray-700">Tahun</label><select id="monthly-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div>
-                    <div id="monthly-report-info-pdf" class="mb-4 hidden pdf-visible"></div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div class="bg-green-50 p-5 rounded-xl border border-green-200"><div class="text-sm font-medium text-green-600">Total Pemasukan</div><div id="monthly-report-income" class="text-2xl font-bold text-green-800 mt-1">IDR 0</div></div>
-                        <div class="bg-red-50 p-5 rounded-xl border border-red-200"><div class="text-sm font-medium text-red-600">Total Pengeluaran</div><div id="monthly-report-expense" class="text-2xl font-bold text-red-800 mt-1">IDR 0</div></div>
-                        <div class="bg-blue-50 p-5 rounded-xl border border-blue-200"><div class="text-sm font-medium text-blue-600">Saldo Akhir</div><div id="monthly-report-cashflow" class="text-2xl font-bold text-blue-800 mt-1">IDR 0</div></div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Arus Kas</h3><div style="height:200px"><canvas id="monthly-cashflow-chart"></canvas></div></div>
-                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Pemasukan</h3><div style="height:200px"><canvas id="monthly-income-chart"></canvas></div></div>
-                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Pengeluaran</h3><div style="height:200px"><canvas id="monthly-expense-chart"></canvas></div></div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div><h3 class="text-lg font-semibold mb-3 text-green-700">Rincian Pemasukan</h3><div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-green-50"><tr><th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th></tr></thead><tbody id="monthly-income-table-body" class="divide-y divide-gray-200 bg-white"></tbody></table></div></div>
-                        <div><h3 class="text-lg font-semibold mb-3 text-red-700">Rincian Pengeluaran</h3><div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-red-50"><tr><th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th></tr></thead><tbody id="monthly-expense-table-body" class="divide-y divide-gray-200 bg-white"></tbody></table></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- View: Laporan Tahunan -->
-            <div id="view-laporan-tahunan" class="view-content hidden"><div class="bg-white p-6 rounded-2xl shadow-lg printable-area"><div class="flex justify-between items-center mb-4 no-print"><h2 class="text-2xl font-bold pdf-hidden">Laporan Tahunan</h2><button id="download-annual-pdf" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"><i class="fas fa-file-pdf"></i> <span>Download PDF</span></button></div><h2 class="text-2xl font-bold mb-4 hidden pdf-visible">Laporan Tahunan</h2><div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"><div><label class="block text-sm font-medium text-gray-700">Mulai Bulan</label><select id="annual-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium text-gray-700">Mulai Tahun</label><select id="annual-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pemasukan 12 Bulan</h3><div style="height:200px"><canvas id="annual-income-chart"></canvas></div></div><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pengeluaran 12 Bulan</h3><div style="height:200px"><canvas id="annual-expense-chart"></canvas></div></div></div><div class="p-5 rounded-xl border border-gray-200 mb-8"><h3 class="text-lg font-semibold mb-3 text-center">Arus Kas 12 Bulan</h3><div style="height:200px"><canvas id="annual-cashflow-chart"></canvas></div></div><div class="space-y-8"><div><h3 class="text-xl font-semibold mb-3 text-blue-700">Overview</h3><div class="overflow-x-auto shadow rounded-lg"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-blue-600 text-white"><tr id="annual-overview-header"></tr></thead><tbody id="annual-overview-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div></div></div>
-            
-            <!-- View: Anomali & Master Setting (Disembunyikan untuk ringkas, konten ada di script) -->
-            <div id="view-transaksi-anomali" class="view-content hidden"><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-2xl font-bold mb-4">Deteksi Transaksi Anomali</h2><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Kategori</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Keterangan</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500">Jumlah</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500">Rata-rata</th></tr></thead><tbody id="anomaly-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>
-            <div id="view-master-setting" class="view-content hidden space-y-8"><div class="bg-white p-6 rounded-2xl shadow-lg"><div class="flex justify-between items-center mb-6 no-print"><h2 class="text-2xl font-bold">Master Kategori</h2><button id="add-category-btn" class="py-2 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700">+ Tambah</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-lg font-semibold text-green-700 mb-3">Pemasukan</h3><ul id="master-pemasukan-list" class="divide-y divide-gray-200"></ul></div><div><h3 class="text-lg font-semibold text-red-700 mb-3">Pengeluaran</h3><ul id="master-pengeluaran-list" class="divide-y divide-gray-200"></ul></div></div></div><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-2xl font-bold mb-4">Master Transaksi Berulang</h2><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Tgl</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Jenis</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Kategori</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500">Jumlah</th><th class="px-6 py-3 text-center text-xs font-medium text-gray-500">Aksi</th></tr></thead><tbody id="recurring-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>
-        </main>
-    </div>
-
-    <!-- Modals -->
-    <div id="status-modal" class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-xl transition-all translate-y-16 opacity-0 hidden no-print"><p id="status-message"></p></div>
-    <div id="category-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 id="category-modal-title" class="text-xl font-semibold mb-6">Tambah Kategori</h3><form id="category-modal-form"><input type="hidden" id="category-modal-id"><div class="space-y-4"><div><label class="block text-sm font-medium">Nama</label><input type="text" id="category-modal-name" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></div><div><label class="block text-sm font-medium">Jenis</label><select id="category-modal-type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"><option value="pemasukan">Pemasukan</option><option value="pengeluaran">Pengeluaran</option></select></div></div><div class="flex justify-end space-x-3 mt-8"><button type="button" id="category-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100">Batal</button><button type="submit" class="py-2 px-4 rounded-lg text-white bg-blue-600">Simpan</button></div></form></div></div>
-    <div id="excel-download-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 class="text-xl font-semibold mb-6">Download Excel</h3><div class="space-y-4"><div><label class="block text-sm font-medium">Bulan</label><select id="excel-month-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium">Tahun</label><select id="excel-year-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div><div class="flex justify-end space-x-3 mt-8"><button type="button" id="excel-download-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100">Batal</button><button type="button" id="download-excel-confirm" class="py-2 px-4 rounded-lg text-white bg-green-600">Download</button></div></div></div>
-    <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 class="text-xl font-semibold mb-4">Hapus Data?</h3><div class="flex justify-end space-x-3 mt-6"><button type="button" id="delete-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100">Batal</button><button type="button" id="delete-modal-confirm" class="py-2 px-4 rounded-lg text-white bg-red-600">Hapus</button></div></div></div>
-
-    <!-- SCRIPT -->
-    <script type="module">
-        const SUPABASE_URL = 'https://azgkrncmbalimhwickmm.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_0JKn3axQn0QEqSGsgtCg1Q_Bi-QCYM2';
-
-        // SAFE JS LOADING
-        let jsPDF = window.jspdf ? window.jspdf.jsPDF : null;
-        const { createClient } = supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true } });
-
-        let userId, categoriesData = { pemasukan: [], pengeluaran: [] }, allTransactions = [], charts = {}, deleteTarget = null;
-        const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-
-        // UTILS
-        function formatCurrency(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
-        function showStatus(msg, err=false) {
-            const el = document.getElementById('status-modal'); document.getElementById('status-message').textContent = msg;
-            el.classList.remove('hidden', 'bg-gray-800', 'bg-red-600', 'translate-y-16', 'opacity-0');
-            el.classList.add(err ? 'bg-red-600' : 'bg-gray-800', 'translate-y-0', 'opacity-100');
-            setTimeout(() => { el.classList.add('translate-y-16', 'opacity-0'); setTimeout(() => el.classList.add('hidden'), 300); }, 3000);
-        }
-        function showModal(id) { document.getElementById('modal-backdrop').classList.remove('hidden'); document.getElementById(id).classList.remove('hidden'); }
-        function hideModal(id) { document.getElementById('modal-backdrop').classList.add('hidden'); document.getElementById(id).classList.add('hidden'); }
-
-        // INIT FILTERS
-        function initFilters() {
-            const now = new Date();
-            const populate = (m, y) => {
-                m.innerHTML = ''; y.innerHTML = '';
-                MONTH_NAMES.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; m.appendChild(o); });
-                [now.getFullYear(), now.getFullYear()-1, now.getFullYear()-2].forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; y.appendChild(o); });
-                m.value = now.getMonth(); y.value = now.getFullYear();
-            };
-            populate(document.getElementById('monthly-report-month'), document.getElementById('monthly-report-year'));
-            populate(document.getElementById('annual-report-month'), document.getElementById('annual-report-year'));
-            populate(document.getElementById('excel-month-select'), document.getElementById('excel-year-select'));
-            document.getElementById('annual-report-month').value = 0;
+            await loadData();
+            initUI();
+            document.getElementById('screen-loading').classList.add('hidden');
+            document.getElementById('screen-app').classList.remove('hidden');
+            renderBeranda();
         }
 
-        // MAIN LOAD
+        function initOffline() { isOnline = false; userId = 'user_local'; document.getElementById('status-text').innerHTML = '<span class="text-orange-500">●</span> Offline'; }
+
         async function loadData() {
             try {
-                await Promise.all([loadCategories(), loadTransactions(), loadRecurring()]);
-                renderDashboard();
-            } catch (error) {
-                alert("Gagal memuat data. Cek koneksi atau tabel database: " + error.message);
-            }
-        }
-
-        async function loadCategories() {
-            const { data, error } = await db.from('categories').select('*').eq('user_id', userId);
-            if(error) throw error;
-            categoriesData.pemasukan = data.filter(c => c.type === 'pemasukan');
-            categoriesData.pengeluaran = data.filter(c => c.type === 'pengeluaran');
-            if(data.length === 0) await initDefaultCategories();
-            updateCategoryOptions();
-            renderMasterSettings();
-        }
-        async function loadTransactions() {
-            const { data, error } = await db.from('transactions').select('*').eq('user_id', userId);
-            if(error) throw error;
-            allTransactions = data || [];
-        }
-        async function loadRecurring() {
-            // Try-catch specific for recurring to avoid crash if table missing
-            try {
-                const { data, error } = await db.from('recurring_transactions').select('*').eq('user_id', userId);
-                if(!error) {
-                    renderRecurringList(data || []);
-                    checkAndGenerateRecurring(data || []);
-                }
-            } catch (e) { console.log("Recurring table missing/error, skipping feature."); }
-        }
-
-        async function initDefaultCategories() {
-            const defaults = [
-                { name: "Gaji", type: "pemasukan" }, { name: "Bonus", type: "pemasukan" },
-                { name: "Asuransi", type: "pengeluaran" }, { name: "Belanja Harian", type: "pengeluaran" },
-                { name: "Cicilan", type: "pengeluaran" }, { name: "Hiburan", type: "pengeluaran" },
-                { name: "Kesehatan", type: "pengeluaran" }, { name: "Lain-lain", type: "pengeluaran" },
-                { name: "Listrik/Air", type: "pengeluaran" }, { name: "Makan Minum", type: "pengeluaran" },
-                { name: "Pendidikan", type: "pengeluaran" }, { name: "Transportasi", type: "pengeluaran" }
-            ].map(c => ({...c, user_id: userId}));
-            await db.from('categories').insert(defaults);
-            await loadCategories();
-        }
-
-        // RECURRING LOGIC
-        async function checkAndGenerateRecurring(rules) {
-            const now = new Date();
-            const today = now.getDate();
-            let newTx = [], updatedIds = [];
-
-            rules.forEach(r => {
-                let last = r.last_generated ? new Date(r.last_generated) : null;
-                const isDone = last && last.getMonth() === now.getMonth() && last.getFullYear() === now.getFullYear();
-                if (!isDone && today >= r.day_of_month) {
-                    newTx.push({
-                        date: new Date().toISOString().split('T')[0], type: r.type, category: r.category,
-                        amount: r.amount, description: (r.description||'') + " (Otomatis)", user_id: userId
-                    });
-                    updatedIds.push(r.id);
-                }
-            });
-
-            if (newTx.length > 0) {
-                await db.from('transactions').insert(newTx);
-                const todayStr = new Date().toISOString().split('T')[0];
-                for(let id of updatedIds) await db.from('recurring_transactions').update({ last_generated: todayStr }).eq('id', id);
-                await loadTransactions();
-                renderDashboard();
-                showStatus(newTx.length + " Transaksi rutin dibuat.");
-            }
-        }
-
-        // RENDERERS
-        function renderDashboard() {
-            const now = new Date();
-            const cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
-            let openBal = 0, inc = 0, exp = 0;
-
-            allTransactions.forEach(t => {
-                if (new Date(t.date) < cutoff) openBal += (t.type === 'pemasukan' ? t.amount : -t.amount);
-            });
-
-            const curTx = allTransactions.filter(t => {
-                const d = new Date(t.date);
-                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            }).sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            const list = document.getElementById('transaction-list');
-            list.innerHTML = '';
-
-            if (openBal !== 0) {
-                const cls = openBal >= 0 ? 'text-yellow-700 bg-yellow-50' : 'text-red-700 bg-red-50';
-                list.innerHTML += `<tr class="${cls} border-b font-bold"><td class="px-6 py-3">1 ${MONTH_NAMES[now.getMonth()]}</td><td class="px-6 py-3">SALDO AWAL</td><td class="px-6 py-3 italic">Sisa bulan lalu</td><td class="px-6 py-3 text-right">${formatCurrency(openBal)}</td><td></td></tr>`;
-            }
-
-            if(curTx.length === 0 && openBal === 0) {
-                list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data bulan ini</td></tr>';
-            } else {
-                curTx.forEach(t => {
-                    if(t.type === 'pemasukan') inc += t.amount; else exp += t.amount;
-                    list.innerHTML += `<tr class="border-b hover:bg-gray-50 ${t.type === 'pemasukan' ? 'bg-green-50' : 'bg-red-50'}">
-                        <td class="px-6 py-3 text-sm">${new Date(t.date).toLocaleDateString('id-ID')}</td>
-                        <td class="px-6 py-3 text-sm font-medium">${t.category}</td>
-                        <td class="px-6 py-3 text-sm text-gray-500 truncate max-w-xs">${t.description || '-'}</td>
-                        <td class="px-6 py-3 text-right text-sm font-bold ${t.type === 'pemasukan' ? 'text-green-600' : 'text-red-600'}">${formatCurrency(t.amount)}</td>
-                        <td class="px-6 py-3 text-center">
-                            <button onclick="window.editTx(${t.id})" class="text-blue-500 mr-2"><i class="fas fa-pen"></i></button>
-                            <button onclick="window.delData('transaction', ${t.id})" class="text-red-500"><i class="fas fa-trash"></i></button>
-                        </td></tr>`;
-                });
-            }
-
-            document.getElementById('summary-income').textContent = formatCurrency(inc);
-            document.getElementById('summary-expense').textContent = formatCurrency(exp);
-            document.getElementById('summary-prev-balance').textContent = formatCurrency(openBal);
-            document.getElementById('summary-balance').textContent = formatCurrency(openBal + inc - exp);
-        }
-
-        function renderMonthlyReport() {
-            const mIdx = document.getElementById('monthly-report-month').value;
-            const y = document.getElementById('monthly-report-year').value;
-            
-            const cutoff = new Date(y, mIdx, 1);
-            let openBal = 0, inc = 0, exp = 0;
-            const incCat = {}, expCat = {};
-
-            allTransactions.forEach(t => {
-                const d = new Date(t.date);
-                if (d < cutoff) openBal += (t.type === 'pemasukan' ? t.amount : -t.amount);
-                else if (d.getMonth() == mIdx && d.getFullYear() == y) {
-                    if(t.type === 'pemasukan') {
-                        inc += t.amount; incCat[t.category] = (incCat[t.category] || 0) + t.amount;
-                    } else {
-                        exp += t.amount; expCat[t.category] = (expCat[t.category] || 0) + t.amount;
-                    }
-                }
-            });
-
-            // Chart Helpers
-            const destroy = (id) => { if(charts[id]) charts[id].destroy(); };
-            const drawDoughnut = (id, data) => {
-                destroy(id);
-                const labels = Object.keys(data);
-                const values = Object.values(data);
-                const isEmpty = labels.length === 0;
-                charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: isEmpty ? ['Data Kosong'] : labels,
-                        datasets: [{ data: isEmpty ? [1] : values, backgroundColor: isEmpty ? ['#e5e7eb'] : labels.map((_,i)=>`hsl(${i*137.5%360},70%,60%)`) }]
-                    },
-                    options: { plugins: { legend: { position: 'bottom' }, tooltip: { enabled: !isEmpty } }, maintainAspectRatio: false }
-                });
-            };
-
-            drawDoughnut('monthly-income-chart', incCat);
-            drawDoughnut('monthly-expense-chart', expCat);
-
-            destroy('monthly-cashflow-chart');
-            charts['monthly-cashflow-chart'] = new Chart(document.getElementById('monthly-cashflow-chart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Dana'],
-                    datasets: [
-                        { label: 'Saldo Awal', data: [openBal], backgroundColor: '#eab308' },
-                        { label: 'Pemasukan', data: [inc], backgroundColor: '#22c55e' },
-                        { label: 'Pengeluaran', data: [exp], backgroundColor: '#ef4444' }
-                    ]
-                },
-                options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
-            });
-
-            // Tables
-            const fillTable = (id, data) => {
-                const el = document.getElementById(id);
-                el.innerHTML = Object.keys(data).length === 0 
-                    ? '<tr><td colspan="2" class="p-3 text-center text-gray-400">Tidak ada data</td></tr>'
-                    : Object.entries(data).map(([k,v]) => `<tr><td class="p-2 border-b text-sm">${k}</td><td class="p-2 border-b text-right font-bold text-sm">${formatCurrency(v)}</td></tr>`).join('');
-            };
-            fillTable('monthly-income-table-body', incCat);
-            fillTable('monthly-expense-table-body', expCat);
-
-            document.getElementById('monthly-report-income').textContent = formatCurrency(inc);
-            document.getElementById('monthly-report-expense').textContent = formatCurrency(exp);
-            document.getElementById('monthly-report-cashflow').textContent = formatCurrency(openBal + inc - exp);
-        }
-
-        // ACTIONS & HELPERS
-        window.editTx = (id) => {
-            const t = allTransactions.find(x => x.id === id);
-            if(!t) return;
-            document.getElementById('date').value = t.date;
-            document.getElementById('type').value = t.type;
-            updateCategoryOptions();
-            document.getElementById('category').value = t.category;
-            document.getElementById('amount').value = t.amount;
-            document.getElementById('description').value = t.description.replace(" (Otomatis)", "");
-            document.getElementById('tx-id').value = id;
-            
-            const btn = document.getElementById('btn-save-tx');
-            btn.textContent = "Update"; btn.classList.replace('bg-blue-600', 'bg-yellow-600');
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            document.getElementById('recurring-container').classList.add('hidden');
-            document.getElementById('transaction-form').scrollIntoView();
-        };
-
-        window.delData = (type, id) => { deleteTarget = { type, id }; showModal('delete-modal'); };
-        window.openCategoryModal = (mode, id) => {
-            document.getElementById('category-modal-form').reset();
-            document.getElementById('category-modal-id').value = id || "";
-            if(mode === 'edit') {
-                const c = [...categoriesData.pemasukan, ...categoriesData.pengeluaran].find(x => x.id == id);
-                if(c) { document.getElementById('category-modal-name').value = c.name; document.getElementById('category-modal-type').value = c.type; }
-            }
-            showModal('category-modal');
-        };
-
-        function updateCategoryOptions() {
-            const t = document.getElementById('type').value;
-            const s = document.getElementById('category');
-            s.innerHTML = '';
-            (categoriesData[t]||[]).forEach(c => { const o = document.createElement('option'); o.value = c.name; o.textContent = c.name; s.appendChild(o); });
-            s.disabled = s.options.length === 0;
-        }
-
-        function renderMasterSettings() {
-            const makeList = (data, el) => {
-                el.innerHTML = data.map(c => `<li class="flex justify-between py-2 text-sm border-b border-gray-100"><span>${c.name}</span><div><button onclick="window.openCategoryModal('edit',${c.id})" class="text-blue-500 mr-2">Edit</button><button onclick="window.delData('category',${c.id})" class="text-red-500">Hapus</button></div></li>`).join('');
-            };
-            makeList(categoriesData.pemasukan, document.getElementById('master-pemasukan-list'));
-            makeList(categoriesData.pengeluaran, document.getElementById('master-pengeluaran-list'));
-        }
-
-        function renderRecurringList(data) {
-            const el = document.getElementById('recurring-list');
-            if(!data.length) { el.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">Kosong</td></tr>'; return; }
-            el.innerHTML = data.map(r => `<tr class="border-b"><td class="p-3 text-sm">Tgl ${r.day_of_month}</td><td class="p-3 text-sm capitalize">${r.type}</td><td class="p-3 text-sm">${r.category}</td><td class="p-3 text-sm">${r.description||'-'}</td><td class="p-3 text-sm text-right font-bold">${formatCurrency(r.amount)}</td><td class="p-3 text-center"><button onclick="window.delData('recurring',${r.id})" class="text-red-500"><i class="fas fa-trash"></i></button></td></tr>`).join('');
-        }
-
-        // EVENT LISTENERS
-        document.getElementById('login-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            if(document.getElementById('password').value !== 'alfinrho$') return document.getElementById('login-error').classList.remove('hidden');
-            
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('main-app-content').classList.remove('hidden');
-            
-            // Auth Logic
-            let { data: { user } } = await db.auth.getUser();
-            if(!user) {
-                const email = `user${Date.now()}@demo.com`;
-                const { data: up, error } = await db.auth.signUp({ email, password: 'password123' });
-                if(error) return alert("Gagal Login DB: " + error.message);
-                user = up.user;
-            }
-            userId = user.id;
-            document.getElementById('user-id-display').textContent = "ID: " + userId.substring(0,8);
-            
-            initFilters(); // Init UI First
-            loadData();    // Load Data Async
-        });
-
-        document.getElementById('transaction-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            if(!userId) return alert("Sesi habis");
-            const btn = document.getElementById('btn-save-tx');
-            btn.textContent = "Proses..."; btn.disabled = true;
-
-            try {
-                const id = document.getElementById('tx-id').value;
-                const payload = {
-                    date: document.getElementById('date').value,
-                    type: document.getElementById('type').value,
-                    category: document.getElementById('category').value,
-                    amount: document.getElementById('amount').value,
-                    description: document.getElementById('description').value,
-                    user_id: userId
-                };
-
-                if(id) {
-                    await db.from('transactions').update(payload).eq('id', id);
-                    window.cancelEdit();
+                if (isOnline) {
+                    const [c, t, r] = await Promise.all([
+                        db.from('categories').select('*').eq('user_id', userId).catch(()=>({data:[]})),
+                        db.from('transactions').select('*').eq('user_id', userId).catch(()=>({data:[]})),
+                        db.from('recurring_transactions').select('*').eq('user_id', userId).catch(()=>({data:[]}))
+                    ]);
+                    data.cat = c.data || []; data.tx = t.data || []; data.rec = r.data || [];
                 } else {
-                    await db.from('transactions').insert([payload]);
-                    if(document.getElementById('is-recurring').checked) {
-                        const rule = { ...payload, day_of_month: new Date(payload.date).getDate(), last_generated: payload.date };
-                        delete rule.date; 
-                        // Safe check if table exists
-                        try { await db.from('recurring_transactions').insert([rule]); } catch(e){}
-                    }
-                    document.getElementById('transaction-form').reset();
-                    document.getElementById('date').valueAsDate = new Date();
+                    data.cat = await Local.op('select', 'categories', userId);
+                    data.tx = await Local.op('select', 'transactions', userId);
+                    data.rec = await Local.op('select', 'recurring', userId);
                 }
-                await loadTransactions();
-                if(document.getElementById('is-recurring').checked) await loadRecurring();
-                renderDashboard();
-                showStatus("Berhasil disimpan");
-            } catch (err) { alert("Gagal: " + err.message); }
-            finally { btn.textContent = "Simpan"; btn.disabled = false; }
-        });
-
-        document.getElementById('btn-cancel-edit').addEventListener('click', window.cancelEdit);
-        window.cancelEdit = () => {
-            document.getElementById('transaction-form').reset();
-            document.getElementById('date').valueAsDate = new Date();
-            document.getElementById('tx-id').value = "";
-            const btn = document.getElementById('btn-save-tx');
-            btn.textContent = "Simpan"; btn.classList.replace('bg-yellow-600', 'bg-blue-600');
-            document.getElementById('btn-cancel-edit').classList.add('hidden');
-            document.getElementById('recurring-container').classList.remove('hidden');
-            updateCategoryOptions();
-        };
-
-        document.getElementById('type').addEventListener('change', updateCategoryOptions);
-
-        // Delete Logic
-        document.getElementById('delete-modal-confirm').addEventListener('click', async () => {
-            if(!deleteTarget) return;
-            const { type, id } = deleteTarget;
-            const table = type === 'transaction' ? 'transactions' : type === 'category' ? 'categories' : 'recurring_transactions';
-            await db.from(table).delete().eq('id', id);
-            hideModal('delete-modal');
-            if(type === 'transaction') { await loadTransactions(); renderDashboard(); }
-            else if(type === 'category') { await loadCategories(); }
-            else { await loadRecurring(); }
-        });
-        document.getElementById('delete-modal-cancel').addEventListener('click', () => hideModal('delete-modal'));
-
-        // Category Modal
-        document.getElementById('category-modal-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            const name = document.getElementById('category-modal-name').value;
-            const type = document.getElementById('category-modal-type').value;
-            const id = document.getElementById('category-modal-id').value;
-            const payload = { name, type, user_id: userId };
-            
-            if(id) await db.from('categories').update(payload).eq('id', id);
-            else await db.from('categories').insert([payload]);
-            
-            hideModal('category-modal');
-            await loadCategories();
-        });
-        document.getElementById('category-modal-cancel').addEventListener('click', () => hideModal('category-modal'));
-        document.getElementById('add-category-btn').addEventListener('click', () => window.openCategoryModal('add'));
-
-        // Navigation
-        document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', e => {
-            e.preventDefault();
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('bg-gray-100', 'text-blue-600'));
-            l.classList.add('bg-gray-100', 'text-blue-600');
-            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
-            document.getElementById(l.dataset.view).classList.remove('hidden');
-            
-            if(l.dataset.view === 'view-laporan-bulanan') renderMonthlyReport();
-            // Add other render calls if needed
-        }));
-
-        // Report Filters Change
-        ['monthly-report-month', 'monthly-report-year'].forEach(id => 
-            document.getElementById(id).addEventListener('change', renderMonthlyReport)
-        );
-
-        // PDF & Excel
-        document.getElementById('download-monthly-pdf').addEventListener('click', () => {
-            if(!jsPDF) jsPDF = window.jspdf.jsPDF; // Lazy load check
-            const el = document.querySelector('#view-laporan-bulanan .printable-area');
-            // Temp show charts for PDF
-            html2canvas(el).then(c => {
-                const pdf = new jsPDF('l', 'mm', 'a4');
-                pdf.addImage(c.toDataURL('image/png'), 'PNG', 10, 10, 280, 0);
-                pdf.save('Laporan_Bulanan.pdf');
-            });
-        });
-
-        // Init
-        document.getElementById('date').valueAsDate = new Date();
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="id" class="h-full bg-gray-100">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencatat Keuangan Pribadi</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Library PDF & Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    <!-- Supabase Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        html { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
-        input[type='number']::-webkit-outer-spin-button, input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type='number'] { -moz-appearance: textfield; }
-        
-        /* CSS PDF */
-        body.is-printing-pdf .printable-area { font-size: 10px; background: white; padding: 20px; }
-        body.is-printing-pdf .printable-area h2 { font-size: 1.25rem; line-height: 1.75rem; }
-        body.is-printing-pdf .printable-area h3 { font-size: 1rem; line-height: 1.5rem; }
-        body.is-printing-pdf .printable-area th, body.is-printing-pdf .printable-area td { padding: 4px 6px !important; font-size: 8px !important; }
-        body.is-printing-pdf .no-print { display: none !important; }
-        body.is-printing-pdf .printable-area h2.pdf-hidden { display: none !important; }
-        body.is-printing-pdf .printable-area h2.pdf-visible { display: block !important; }
-    </style>
-</head>
-
-<body class="h-full bg-gray-100">
-    <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden no-print"></div>
-
-    <!-- Overlay Login -->
-    <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 p-4 no-print">
-        <div class="w-full max-w-sm p-8 bg-white rounded-2xl shadow-xl">
-            <h2 class="text-3xl font-bold text-center text-gray-800">Hai Alfin Rho</h2>
-            <p class="mt-2 text-center text-gray-500">Masukkan password untuk akses</p>
-            <form id="login-form" class="mt-8 space-y-6">
-                <div>
-                    <input id="password" name="password" type="password" required class="w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Password">
-                </div>
-                <p id="login-error" class="text-sm text-red-600 text-center hidden">Password salah.</p>
-                <button type="submit" class="w-full py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700 transition-colors">Login</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Main App -->
-    <div id="main-app-content" class="hidden h-full flex flex-col">
-        <header class="bg-white shadow-md w-full p-4 flex justify-between items-center z-10 sticky top-0 no-print">
-            <div class="flex items-baseline space-x-6">
-                <h1 class="text-2xl font-bold text-blue-700">Keuanganku</h1>
-                <nav>
-                    <ul class="flex space-x-1">
-                        <li><a href="#" data-view="view-beranda" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100 bg-gray-100 text-blue-600">Beranda</a></li>
-                        <li><a href="#" data-view="view-laporan-bulanan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Laporan Bulanan</a></li>
-                        <li><a href="#" data-view="view-laporan-tahunan" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Laporan Tahunan</a></li>
-                        <li><a href="#" data-view="view-transaksi-anomali" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Anomali</a></li>
-                        <li><a href="#" data-view="view-master-setting" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-100">Master Setting</a></li>
-                    </ul>
-                </nav>
-            </div>
-            <span id="user-id-display" class="text-xs text-gray-400 truncate" title="User ID"></span>
-        </header>
-
-        <main class="flex-1 overflow-y-auto p-8">
-            <!-- View: Beranda -->
-            <div id="view-beranda" class="view-content grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h2 class="text-xl font-semibold mb-5">Summary (Bulan Ini)</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="bg-green-50 p-5 rounded-xl border border-green-200"><div class="text-sm font-medium text-green-600">Pemasukan (Aktual)</div><div id="summary-income" class="text-2xl font-bold text-green-800 mt-1">IDR 0</div></div>
-                            <div class="bg-red-50 p-5 rounded-xl border border-red-200"><div class="text-sm font-medium text-red-600">Pengeluaran</div><div id="summary-expense" class="text-2xl font-bold text-red-800 mt-1">IDR 0</div></div>
-                            <div class="bg-blue-50 p-5 rounded-xl border border-blue-200"><div class="text-sm font-medium text-blue-600">Saldo Akhir</div><div id="summary-balance" class="text-2xl font-bold text-blue-800 mt-1">IDR 0</div></div>
-                        </div>
-                        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex justify-between items-center">
-                            <span class="text-sm font-medium text-yellow-800"><i class="fas fa-history mr-2"></i>Sisa Saldo Bulan Lalu:</span>
-                            <span id="summary-prev-balance" class="text-lg font-bold text-yellow-800">IDR 0</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <div class="flex justify-between items-center mb-5">
-                            <h2 class="text-xl font-semibold">Riwayat Transaksi</h2>
-                            <button id="open-excel-modal" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-green-600 hover:bg-green-700 transition-colors no-print"><i class="fas fa-file-excel"></i> <span>Download Excel</span></button>
-                        </div>
-                        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th><th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase w-20">Aksi</th></tr></thead><tbody id="transaction-list" class="bg-white divide-y divide-gray-200"></tbody></table></div>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-1">
-                    <div class="bg-white p-6 rounded-2xl shadow-lg sticky top-24 no-print">
-                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Tambah Transaksi</h2>
-                            <form id="transaction-form" class="space-y-4">
-                                <input type="hidden" id="tx-id">
-                                <div><label class="block text-sm font-medium text-gray-700">Tanggal</label><input type="date" id="date" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Jenis</label><select id="type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"><option value="pengeluaran">Pengeluaran</option><option value="pemasukan">Pemasukan</option></select></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Kategori</label><select id="category" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm" disabled><option value="">Pilih jenis dulu...</option></select></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Jumlah (IDR)</label><input type="number" id="amount" required min="0" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></div>
-                                <div><label class="block text-sm font-medium text-gray-700">Keterangan</label><textarea id="description" rows="2" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></textarea></div>
-                                <div class="flex items-center" id="recurring-container"><input id="is-recurring" type="checkbox" class="h-4 w-4 text-blue-600 rounded"><label for="is-recurring" class="ml-2 block text-sm text-gray-900">Transaksi Berulang (Tiap Bulan)</label></div>
-                                <div class="flex gap-2"><button type="submit" id="btn-save-tx" class="flex-1 py-3 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700">Simpan</button><button type="button" id="btn-cancel-edit" class="hidden px-4 py-3 rounded-lg text-gray-700 bg-gray-200">Batal</button></div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- View: Laporan Bulanan -->
-            <div id="view-laporan-bulanan" class="view-content hidden space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-lg printable-area">
-                    <div class="flex justify-between items-center mb-4 no-print"><h2 class="text-2xl font-bold pdf-hidden">Laporan Bulanan</h2><button id="download-monthly-pdf" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"><i class="fas fa-file-pdf"></i> <span>Download PDF</span></button></div>
-                    <div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"><div><label class="block text-sm font-medium text-gray-700">Bulan</label><select id="monthly-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium text-gray-700">Tahun</label><select id="monthly-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div>
-                    <div id="monthly-report-info-pdf" class="mb-4 hidden pdf-visible"></div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div class="bg-green-50 p-5 rounded-xl border border-green-200"><div class="text-sm font-medium text-green-600">Total Pemasukan</div><div id="monthly-report-income" class="text-2xl font-bold text-green-800 mt-1">IDR 0</div></div>
-                        <div class="bg-red-50 p-5 rounded-xl border border-red-200"><div class="text-sm font-medium text-red-600">Total Pengeluaran</div><div id="monthly-report-expense" class="text-2xl font-bold text-red-800 mt-1">IDR 0</div></div>
-                        <div class="bg-blue-50 p-5 rounded-xl border border-blue-200"><div class="text-sm font-medium text-blue-600">Saldo Akhir</div><div id="monthly-report-cashflow" class="text-2xl font-bold text-blue-800 mt-1">IDR 0</div></div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Arus Kas</h3><div style="height:200px"><canvas id="monthly-cashflow-chart"></canvas></div></div>
-                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Pemasukan</h3><div style="height:200px"><canvas id="monthly-income-chart"></canvas></div></div>
-                        <div class="lg:col-span-1 p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3">Pengeluaran</h3><div style="height:200px"><canvas id="monthly-expense-chart"></canvas></div></div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div><h3 class="text-lg font-semibold mb-3 text-green-700">Rincian Pemasukan</h3><div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-green-50"><tr><th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th></tr></thead><tbody id="monthly-income-table-body" class="divide-y divide-gray-200 bg-white"></tbody></table></div></div>
-                        <div><h3 class="text-lg font-semibold mb-3 text-red-700">Rincian Pengeluaran</h3><div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-red-50"><tr><th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th><th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th></tr></thead><tbody id="monthly-expense-table-body" class="divide-y divide-gray-200 bg-white"></tbody></table></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- View: Laporan Tahunan -->
-            <div id="view-laporan-tahunan" class="view-content hidden"><div class="bg-white p-6 rounded-2xl shadow-lg printable-area"><div class="flex justify-between items-center mb-4 no-print"><h2 class="text-2xl font-bold pdf-hidden">Laporan Tahunan</h2><button id="download-annual-pdf" class="flex items-center space-x-2 py-2 px-4 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700 transition-colors"><i class="fas fa-file-pdf"></i> <span>Download PDF</span></button></div><h2 class="text-2xl font-bold mb-4 hidden pdf-visible">Laporan Tahunan</h2><div class="flex space-x-4 mb-6 pb-6 border-b border-gray-200 no-print"><div><label class="block text-sm font-medium text-gray-700">Mulai Bulan</label><select id="annual-report-month" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium text-gray-700">Mulai Tahun</label><select id="annual-report-year" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pemasukan 12 Bulan</h3><div style="height:200px"><canvas id="annual-income-chart"></canvas></div></div><div class="p-5 rounded-xl border border-gray-200"><h3 class="text-lg font-semibold mb-3 text-center">Pengeluaran 12 Bulan</h3><div style="height:200px"><canvas id="annual-expense-chart"></canvas></div></div></div><div class="p-5 rounded-xl border border-gray-200 mb-8"><h3 class="text-lg font-semibold mb-3 text-center">Arus Kas 12 Bulan</h3><div style="height:200px"><canvas id="annual-cashflow-chart"></canvas></div></div><div class="space-y-8"><div><h3 class="text-xl font-semibold mb-3 text-blue-700">Overview</h3><div class="overflow-x-auto shadow rounded-lg"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-blue-600 text-white"><tr id="annual-overview-header"></tr></thead><tbody id="annual-overview-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div></div></div>
-            
-            <!-- View: Anomali & Master Setting (Disembunyikan untuk ringkas, konten ada di script) -->
-            <div id="view-transaksi-anomali" class="view-content hidden"><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-2xl font-bold mb-4">Deteksi Transaksi Anomali</h2><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Tanggal</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Kategori</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Keterangan</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500">Jumlah</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500">Rata-rata</th></tr></thead><tbody id="anomaly-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>
-            <div id="view-master-setting" class="view-content hidden space-y-8"><div class="bg-white p-6 rounded-2xl shadow-lg"><div class="flex justify-between items-center mb-6 no-print"><h2 class="text-2xl font-bold">Master Kategori</h2><button id="add-category-btn" class="py-2 px-4 rounded-lg text-white font-semibold bg-blue-600 hover:bg-blue-700">+ Tambah</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-lg font-semibold text-green-700 mb-3">Pemasukan</h3><ul id="master-pemasukan-list" class="divide-y divide-gray-200"></ul></div><div><h3 class="text-lg font-semibold text-red-700 mb-3">Pengeluaran</h3><ul id="master-pengeluaran-list" class="divide-y divide-gray-200"></ul></div></div></div><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-2xl font-bold mb-4">Master Transaksi Berulang</h2><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Tgl</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Jenis</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500">Kategori</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500">Jumlah</th><th class="px-6 py-3 text-center text-xs font-medium text-gray-500">Aksi</th></tr></thead><tbody id="recurring-list" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div>
-        </main>
-    </div>
-
-    <!-- Modals -->
-    <div id="status-modal" class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-xl transition-all translate-y-16 opacity-0 hidden no-print"><p id="status-message"></p></div>
-    <div id="category-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 id="category-modal-title" class="text-xl font-semibold mb-6">Tambah Kategori</h3><form id="category-modal-form"><input type="hidden" id="category-modal-id"><div class="space-y-4"><div><label class="block text-sm font-medium">Nama</label><input type="text" id="category-modal-name" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></div><div><label class="block text-sm font-medium">Jenis</label><select id="category-modal-type" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"><option value="pemasukan">Pemasukan</option><option value="pengeluaran">Pengeluaran</option></select></div></div><div class="flex justify-end space-x-3 mt-8"><button type="button" id="category-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100">Batal</button><button type="submit" class="py-2 px-4 rounded-lg text-white bg-blue-600">Simpan</button></div></form></div></div>
-    <div id="excel-download-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 class="text-xl font-semibold mb-6">Download Excel</h3><div class="space-y-4"><div><label class="block text-sm font-medium">Bulan</label><select id="excel-month-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div><div><label class="block text-sm font-medium">Tahun</label><select id="excel-year-select" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></select></div></div><div class="flex justify-end space-x-3 mt-8"><button type="button" id="excel-download-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100">Batal</button><button type="button" id="download-excel-confirm" class="py-2 px-4 rounded-lg text-white bg-green-600">Download</button></div></div></div>
-    <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden no-print"><div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"><h3 class="text-xl font-semibold mb-4">Hapus Data?</h3><div class="flex justify-end space-x-3 mt-6"><button type="button" id="delete-modal-cancel" class="py-2 px-4 rounded-lg text-gray-700 bg-gray-100">Batal</button><button type="button" id="delete-modal-confirm" class="py-2 px-4 rounded-lg text-white bg-red-600">Hapus</button></div></div></div>
-
-    <!-- SCRIPT -->
-    <script type="module">
-        const SUPABASE_URL = 'https://azgkrncmbalimhwickmm.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_0JKn3axQn0QEqSGsgtCg1Q_Bi-QCYM2';
-
-        // SAFE JS LOADING
-        let jsPDF = window.jspdf ? window.jspdf.jsPDF : null;
-        const { createClient } = supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true } });
-
-        let userId, categoriesData = { pemasukan: [], pengeluaran: [] }, allTransactions = [], charts = {}, deleteTarget = null;
-        const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-
-        // UTILS
-        function formatCurrency(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
-        function showStatus(msg, err=false) {
-            const el = document.getElementById('status-modal'); document.getElementById('status-message').textContent = msg;
-            el.classList.remove('hidden', 'bg-gray-800', 'bg-red-600', 'translate-y-16', 'opacity-0');
-            el.classList.add(err ? 'bg-red-600' : 'bg-gray-800', 'translate-y-0', 'opacity-100');
-            setTimeout(() => { el.classList.add('translate-y-16', 'opacity-0'); setTimeout(() => el.classList.add('hidden'), 300); }, 3000);
+                if (data.cat.length === 0) await seedData();
+                checkRecurring();
+                updateCats();
+                renderSetting();
+            } catch(e) { alert("Load Error: "+e.message); }
         }
-        function showModal(id) { document.getElementById('modal-backdrop').classList.remove('hidden'); document.getElementById(id).classList.remove('hidden'); }
-        function hideModal(id) { document.getElementById('modal-backdrop').classList.add('hidden'); document.getElementById(id).classList.add('hidden'); }
 
-        // INIT FILTERS
-        function initFilters() {
+        async function seedData() {
+            const defs = [
+                {name:"Gaji",type:"pemasukan"},{name:"Bonus",type:"pemasukan"},
+                {name:"Makan",type:"pengeluaran"},{name:"Transport",type:"pengeluaran"},
+                {name:"Belanja",type:"pengeluaran"},{name:"Cicilan",type:"pengeluaran"},
+                {name:"Listrik",type:"pengeluaran"},{name:"Hiburan",type:"pengeluaran"},
+                {name:"Kesehatan",type:"pengeluaran"},{name:"Asuransi",type:"pengeluaran"}
+            ].map(x => ({...x, user_id: userId, budget: 0}));
+            if(isOnline) for(let d of defs) await db.from('categories').insert([d]);
+            else for(let d of defs) await Local.op('insert', 'categories', d);
+            return loadData();
+        }
+
+        // --- CORE LOGIC ---
+        function initUI() {
             const now = new Date();
-            const populate = (m, y) => {
-                m.innerHTML = ''; y.innerHTML = '';
-                MONTH_NAMES.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; m.appendChild(o); });
-                [now.getFullYear(), now.getFullYear()-1, now.getFullYear()-2].forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; y.appendChild(o); });
-                m.value = now.getMonth(); y.value = now.getFullYear();
-            };
-            populate(document.getElementById('monthly-report-month'), document.getElementById('monthly-report-year'));
-            populate(document.getElementById('annual-report-month'), document.getElementById('annual-report-year'));
-            populate(document.getElementById('excel-month-select'), document.getElementById('excel-year-select'));
-            document.getElementById('annual-report-month').value = 0;
-        }
-
-        // MAIN LOAD
-        async function loadData() {
-            try {
-                await Promise.all([loadCategories(), loadTransactions(), loadRecurring()]);
-                renderDashboard();
-            } catch (error) {
-                alert("Gagal memuat data. Cek koneksi atau tabel database: " + error.message);
+            const populate = (id) => {
+                const el = document.getElementById(id); if(!el) return;
+                if(id.includes('month')) el.innerHTML = MONTHS.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+                else el.innerHTML = [now.getFullYear(), now.getFullYear()-1].map(n=>`<option value="${n}">${n}</option>`).join('');
+                if(id.includes('month')) el.value = now.getMonth(); else el.value = now.getFullYear();
             }
+            ['rep-month','rep-year','ann-year'].forEach(populate);
+            document.getElementById('inp-date').valueAsDate = now;
         }
 
-        async function loadCategories() {
-            const { data, error } = await db.from('categories').select('*').eq('user_id', userId);
-            if(error) throw error;
-            categoriesData.pemasukan = data.filter(c => c.type === 'pemasukan');
-            categoriesData.pengeluaran = data.filter(c => c.type === 'pengeluaran');
-            if(data.length === 0) await initDefaultCategories();
-            updateCategoryOptions();
-            renderMasterSettings();
-        }
-        async function loadTransactions() {
-            const { data, error } = await db.from('transactions').select('*').eq('user_id', userId);
-            if(error) throw error;
-            allTransactions = data || [];
-        }
-        async function loadRecurring() {
-            // Try-catch specific for recurring to avoid crash if table missing
-            try {
-                const { data, error } = await db.from('recurring_transactions').select('*').eq('user_id', userId);
-                if(!error) {
-                    renderRecurringList(data || []);
-                    checkAndGenerateRecurring(data || []);
-                }
-            } catch (e) { console.log("Recurring table missing/error, skipping feature."); }
+        window.setTab = (id) => {
+            document.querySelectorAll('.view-section').forEach(e => e.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('bg-white', 'shadow', 'text-blue-600'));
+            document.getElementById('btn-'+id).classList.add('bg-white', 'shadow', 'text-blue-600');
+            if(id === 'view-bulanan') renderReport();
+            if(id === 'view-tahunan') renderAnnual();
+            if(id === 'view-budgeting') renderBudgeting();
+            if(id === 'view-anomali') renderAnomali();
         }
 
-        async function initDefaultCategories() {
-            const defaults = [
-                { name: "Gaji", type: "pemasukan" }, { name: "Bonus", type: "pemasukan" },
-                { name: "Asuransi", type: "pengeluaran" }, { name: "Belanja Harian", type: "pengeluaran" },
-                { name: "Cicilan", type: "pengeluaran" }, { name: "Hiburan", type: "pengeluaran" },
-                { name: "Kesehatan", type: "pengeluaran" }, { name: "Lain-lain", type: "pengeluaran" },
-                { name: "Listrik/Air", type: "pengeluaran" }, { name: "Makan Minum", type: "pengeluaran" },
-                { name: "Pendidikan", type: "pengeluaran" }, { name: "Transportasi", type: "pengeluaran" }
-            ].map(c => ({...c, user_id: userId}));
-            await db.from('categories').insert(defaults);
-            await loadCategories();
-        }
-
-        // RECURRING LOGIC
-        async function checkAndGenerateRecurring(rules) {
-            const now = new Date();
-            const today = now.getDate();
-            let newTx = [], updatedIds = [];
-
-            rules.forEach(r => {
-                let last = r.last_generated ? new Date(r.last_generated) : null;
-                const isDone = last && last.getMonth() === now.getMonth() && last.getFullYear() === now.getFullYear();
-                if (!isDone && today >= r.day_of_month) {
-                    newTx.push({
-                        date: new Date().toISOString().split('T')[0], type: r.type, category: r.category,
-                        amount: r.amount, description: (r.description||'') + " (Otomatis)", user_id: userId
-                    });
-                    updatedIds.push(r.id);
-                }
-            });
-
-            if (newTx.length > 0) {
-                await db.from('transactions').insert(newTx);
-                const todayStr = new Date().toISOString().split('T')[0];
-                for(let id of updatedIds) await db.from('recurring_transactions').update({ last_generated: todayStr }).eq('id', id);
-                await loadTransactions();
-                renderDashboard();
-                showStatus(newTx.length + " Transaksi rutin dibuat.");
-            }
-        }
-
-        // RENDERERS
-        function renderDashboard() {
-            const now = new Date();
-            const cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
-            let openBal = 0, inc = 0, exp = 0;
-
-            allTransactions.forEach(t => {
-                if (new Date(t.date) < cutoff) openBal += (t.type === 'pemasukan' ? t.amount : -t.amount);
-            });
-
-            const curTx = allTransactions.filter(t => {
-                const d = new Date(t.date);
-                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            }).sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            const list = document.getElementById('transaction-list');
+        // --- BUDGETING LOGIC ---
+        window.renderBudgeting = function() {
+            const list = document.getElementById('list-budget');
             list.innerHTML = '';
+            const expCats = data.cat.filter(c => c.type === 'pengeluaran');
+            
+            // Calc 3 Months Avg
+            const now = new Date();
+            const threeMonthsAgo = new Date(); threeMonthsAgo.setMonth(now.getMonth() - 3);
+            let totalPlan = 0, totalAvgInc = 0;
 
-            if (openBal !== 0) {
-                const cls = openBal >= 0 ? 'text-yellow-700 bg-yellow-50' : 'text-red-700 bg-red-50';
-                list.innerHTML += `<tr class="${cls} border-b font-bold"><td class="px-6 py-3">1 ${MONTH_NAMES[now.getMonth()]}</td><td class="px-6 py-3">SALDO AWAL</td><td class="px-6 py-3 italic">Sisa bulan lalu</td><td class="px-6 py-3 text-right">${formatCurrency(openBal)}</td><td></td></tr>`;
-            }
+            // Calc Avg Income
+            const incTx = data.tx.filter(t => t.type === 'pemasukan' && new Date(t.date) >= threeMonthsAgo);
+            totalAvgInc = incTx.reduce((sum, t) => sum + +t.amount, 0) / 3;
 
-            if(curTx.length === 0 && openBal === 0) {
-                list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data bulan ini</td></tr>';
-            } else {
-                curTx.forEach(t => {
-                    if(t.type === 'pemasukan') inc += t.amount; else exp += t.amount;
-                    list.innerHTML += `<tr class="border-b hover:bg-gray-50 ${t.type === 'pemasukan' ? 'bg-green-50' : 'bg-red-50'}">
-                        <td class="px-6 py-3 text-sm">${new Date(t.date).toLocaleDateString('id-ID')}</td>
-                        <td class="px-6 py-3 text-sm font-medium">${t.category}</td>
-                        <td class="px-6 py-3 text-sm text-gray-500 truncate max-w-xs">${t.description || '-'}</td>
-                        <td class="px-6 py-3 text-right text-sm font-bold ${t.type === 'pemasukan' ? 'text-green-600' : 'text-red-600'}">${formatCurrency(t.amount)}</td>
-                        <td class="px-6 py-3 text-center">
-                            <button onclick="window.editTx(${t.id})" class="text-blue-500 mr-2"><i class="fas fa-pen"></i></button>
-                            <button onclick="window.delData('transaction', ${t.id})" class="text-red-500"><i class="fas fa-trash"></i></button>
-                        </td></tr>`;
-                });
-            }
+            expCats.forEach(c => {
+                // Calc Avg Spending for this cat
+                const txs = data.tx.filter(t => t.category === c.name && new Date(t.date) >= threeMonthsAgo);
+                const avg = txs.reduce((sum, t) => sum + +t.amount, 0) / 3;
+                const budget = c.budget || 0;
+                totalPlan += +budget;
 
-            document.getElementById('summary-income').textContent = formatCurrency(inc);
-            document.getElementById('summary-expense').textContent = formatCurrency(exp);
-            document.getElementById('summary-prev-balance').textContent = formatCurrency(openBal);
-            document.getElementById('summary-balance').textContent = formatCurrency(openBal + inc - exp);
+                list.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3">${c.name}</td>
+                        <td class="p-3 text-right text-gray-500">${fmt(avg)}</td>
+                        <td class="p-3 text-right font-bold">
+                            <input type="number" value="${budget}" onchange="saveBudget(${c.id}, this.value)" class="w-24 p-1 border rounded text-right text-sm focus:ring-2 focus:ring-blue-500">
+                        </td>
+                        <td class="p-3 text-center text-xs text-gray-400">Auto-save</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('bud-avg-inc').innerText = fmt(totalAvgInc);
+            document.getElementById('bud-total-plan').innerText = fmt(totalPlan);
+            const diff = totalAvgInc - totalPlan;
+            const el = document.getElementById('bud-est-bal');
+            el.innerText = fmt(diff);
+            el.className = `text-lg font-bold ${diff >= 0 ? 'text-green-600' : 'text-red-600'}`;
         }
 
-        function renderMonthlyReport() {
-            const mIdx = document.getElementById('monthly-report-month').value;
-            const y = document.getElementById('monthly-report-year').value;
-            
-            const cutoff = new Date(y, mIdx, 1);
-            let openBal = 0, inc = 0, exp = 0;
-            const incCat = {}, expCat = {};
+        window.saveBudget = async (id, val) => {
+            const budget = Number(val);
+            if(isOnline) await db.from('categories').update({ budget }).eq('id', id);
+            else await Local.op('update', 'categories', { budget }, id);
+            await loadAllData(); // Refresh local data
+            renderBudgeting(); // Recalculate totals
+            showToast("Budget disimpan");
+        }
 
-            allTransactions.forEach(t => {
+        window.checkBudgetStatus = () => {
+            const type = document.getElementById('inp-type').value;
+            if(type !== 'pengeluaran') {
+                document.getElementById('budget-info-box').classList.add('hidden');
+                return;
+            }
+
+            const catName = document.getElementById('inp-cat').value;
+            const cat = data.cat.find(c => c.name === catName);
+            if(!cat || !cat.budget) {
+                document.getElementById('budget-info-box').classList.add('hidden');
+                return;
+            }
+
+            // Calc usage this month
+            const now = new Date();
+            const used = data.tx
+                .filter(t => t.category === catName && new Date(t.date).getMonth() === now.getMonth())
+                .reduce((sum, t) => sum + +t.amount, 0);
+            
+            const currentInput = Number(document.getElementById('inp-amount').value) || 0;
+            const totalUsed = used + currentInput;
+            const remain = cat.budget - totalUsed;
+
+            document.getElementById('budget-info-box').classList.remove('hidden');
+            document.getElementById('info-budget-limit').innerText = fmt(cat.budget);
+            document.getElementById('info-budget-used').innerText = fmt(totalUsed);
+            
+            const remEl = document.getElementById('info-budget-remain');
+            remEl.innerText = fmt(remain);
+            remEl.className = `font-bold ${remain < 0 ? 'text-red-600' : 'text-green-600'}`;
+        }
+
+        // --- EXISTING RENDERERS (Optimized) ---
+        function renderBeranda() {
+            const now = new Date(), m = now.getMonth(), y = now.getFullYear();
+            const cutoff = new Date(y, m, 1);
+            let open=0, inc=0, exp=0;
+            
+            data.tx.forEach(t => {
                 const d = new Date(t.date);
-                if (d < cutoff) openBal += (t.type === 'pemasukan' ? t.amount : -t.amount);
-                else if (d.getMonth() == mIdx && d.getFullYear() == y) {
-                    if(t.type === 'pemasukan') {
-                        inc += t.amount; incCat[t.category] = (incCat[t.category] || 0) + t.amount;
-                    } else {
-                        exp += t.amount; expCat[t.category] = (expCat[t.category] || 0) + t.amount;
-                    }
+                if (d < cutoff) open += (t.type==='pemasukan'? +t.amount : -t.amount);
+                else if (d.getMonth()===m && d.getFullYear()===y) {
+                    if(t.type==='pemasukan') inc += +t.amount; else exp += +t.amount;
                 }
             });
 
-            // Chart Helpers
-            const destroy = (id) => { if(charts[id]) charts[id].destroy(); };
-            const drawDoughnut = (id, data) => {
-                destroy(id);
-                const labels = Object.keys(data);
-                const values = Object.values(data);
-                const isEmpty = labels.length === 0;
-                charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: isEmpty ? ['Data Kosong'] : labels,
-                        datasets: [{ data: isEmpty ? [1] : values, backgroundColor: isEmpty ? ['#e5e7eb'] : labels.map((_,i)=>`hsl(${i*137.5%360},70%,60%)`) }]
-                    },
-                    options: { plugins: { legend: { position: 'bottom' }, tooltip: { enabled: !isEmpty } }, maintainAspectRatio: false }
-                });
-            };
+            document.getElementById('val-in').innerText = fmt(inc);
+            document.getElementById('val-out').innerText = fmt(exp);
+            document.getElementById('val-bal').innerText = fmt(open + inc - exp);
+            const pb = document.getElementById('summary-prev-balance'); if(pb) pb.innerText = `Saldo Lalu: ${fmt(open)}`;
 
-            drawDoughnut('monthly-income-chart', incCat);
-            drawDoughnut('monthly-expense-chart', expCat);
-
-            destroy('monthly-cashflow-chart');
-            charts['monthly-cashflow-chart'] = new Chart(document.getElementById('monthly-cashflow-chart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: ['Dana'],
-                    datasets: [
-                        { label: 'Saldo Awal', data: [openBal], backgroundColor: '#eab308' },
-                        { label: 'Pemasukan', data: [inc], backgroundColor: '#22c55e' },
-                        { label: 'Pengeluaran', data: [exp], backgroundColor: '#ef4444' }
-                    ]
-                },
-                options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+            const list = document.getElementById('list-tx');
+            list.innerHTML = open!==0 ? `<tr class="bg-blue-50 font-bold text-xs"><td class="p-3">1 ${MONTHS[m]}</td><td class="p-3">SALDO AWAL</td><td class="p-3 text-right">${fmt(open)}</td><td></td></tr>` : '';
+            const curTx = data.tx.filter(t => { const d=new Date(t.date); return d.getMonth()===m && d.getFullYear()===y; }).sort((a,b) => new Date(b.date)-new Date(a.date));
+            if(!curTx.length && open===0) list.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 text-xs">Belum ada data</td></tr>`;
+            curTx.forEach(t => {
+                const cls = t.type==='pemasukan' ? 'text-green-600' : 'text-red-600';
+                list.innerHTML += `<tr class="border-b hover:bg-gray-50 group"><td class="p-3 text-gray-600">${new Date(t.date).getDate()}</td><td class="p-3 font-medium">${t.category}<div class="text-[10px] text-gray-400 font-normal">${t.description||''}</div></td><td class="p-3 text-right font-bold ${cls}">${fmt(t.amount)}</td><td class="p-3 text-center"><button onclick="editTx(${t.id})" class="text-blue-400 mr-2"><i class="fas fa-pen"></i></button><button onclick="delTx(${t.id})" class="text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button></td></tr>`;
             });
-
-            // Tables
-            const fillTable = (id, data) => {
-                const el = document.getElementById(id);
-                el.innerHTML = Object.keys(data).length === 0 
-                    ? '<tr><td colspan="2" class="p-3 text-center text-gray-400">Tidak ada data</td></tr>'
-                    : Object.entries(data).map(([k,v]) => `<tr><td class="p-2 border-b text-sm">${k}</td><td class="p-2 border-b text-right font-bold text-sm">${formatCurrency(v)}</td></tr>`).join('');
-            };
-            fillTable('monthly-income-table-body', incCat);
-            fillTable('monthly-expense-table-body', expCat);
-
-            document.getElementById('monthly-report-income').textContent = formatCurrency(inc);
-            document.getElementById('monthly-report-expense').textContent = formatCurrency(exp);
-            document.getElementById('monthly-report-cashflow').textContent = formatCurrency(openBal + inc - exp);
         }
 
-        // ACTIONS & HELPERS
+        function renderAnomali() {
+            const list = document.getElementById('list-anomali');
+            list.innerHTML = '';
+            
+            // Logic: Expense > 3x Avg OR Expense > Budget (New)
+            const anomalies = [];
+            const expenses = data.tx.filter(t => t.type === 'pengeluaran');
+
+            expenses.forEach(t => {
+                // 1. Check against history
+                const history = expenses.filter(h => h.category === t.category && h.id !== t.id);
+                const avg = history.length ? history.reduce((s,x)=>s+ +x.amount,0)/history.length : 0;
+                
+                // 2. Check against budget
+                const cat = data.cat.find(c => c.name === t.category);
+                const budget = cat ? (cat.budget || 0) : 0;
+
+                let reason = "";
+                if (avg > 0 && Number(t.amount) > avg * 3) reason = "High (>3x Avg)";
+                if (budget > 0 && Number(t.amount) > budget) reason = (reason ? reason + ", " : "") + "Over Budget";
+
+                if (reason) {
+                    list.innerHTML += `
+                    <tr class="border-b hover:bg-red-50">
+                        <td class="p-2">${t.date}</td>
+                        <td class="p-2">${t.category}<br><span class="text-[10px] text-gray-400">${t.description}</span></td>
+                        <td class="p-2 text-right font-bold text-red-600">${fmt(t.amount)}</td>
+                        <td class="p-2 text-right text-gray-500">${budget > 0 ? fmt(budget) : '-'}</td>
+                        <td class="p-2 text-right text-xs font-bold text-orange-600">${reason}</td>
+                    </tr>`;
+                }
+            });
+            if(!list.innerHTML) list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400 text-xs">Aman (Tidak ada anomali)</td></tr>';
+        }
+
+        // ... (Rest of existing render functions: renderReport, renderAnnual, renderSetting, etc. kept compact) ...
+        function renderReport() {
+            const m=document.getElementById('rep-month').value, y=document.getElementById('rep-year').value, txs=data.tx.filter(t=>{const d=new Date(t.date);return d.getMonth()==m&&d.getFullYear()==y});
+            let inc=0,exp=0,incMap={},expMap={}; txs.forEach(t=>{const v=+t.amount;if(t.type==='pemasukan'){inc+=v;incMap[t.category]=(incMap[t.category]||0)+v}else{exp+=v;expMap[t.category]=(expMap[t.category]||0)+v}});
+            const cutoff=new Date(y,m,1); let open=0; data.tx.forEach(t=>{if(new Date(t.date)<cutoff)open+=(t.type==='pemasukan'?+t.amount:-t.amount)});
+            document.getElementById('pdf-period-text').innerText=`Periode: ${MONTHS[m]} ${y}`;
+            drawChart('chart-cf','bar',['Awal','Masuk','Keluar'],[open,inc,exp],['#f59e0b','#10b981','#f43f5e']);
+            drawChart('chart-in','doughnut',Object.keys(incMap),Object.values(incMap),[]); drawChart('chart-out','doughnut',Object.keys(expMap),Object.values(expMap),[]);
+            const fill=(id,map)=>{document.getElementById(id).innerHTML=Object.keys(map).length?Object.entries(map).map(([k,v])=>`<tr class="border-b"><td class="py-2">${k}</td><td class="py-2 text-right font-medium">${fmt(v)}</td></tr>`).join(''):'<tr><td colspan="2" class="text-center py-2 text-xs text-gray-400">Kosong</td></tr>'}; fill('list-rep-in',incMap);fill('list-rep-out',expMap);
+        }
+        function renderAnnual(){
+            const y=document.getElementById('ann-year').value,mData=Array(12).fill(0).map(()=>({inc:0,exp:0}));
+            data.tx.forEach(t=>{const d=new Date(t.date);if(d.getFullYear()==y){if(t.type==='pemasukan')mData[d.getMonth()].inc+=+t.amount;else mData[d.getMonth()].exp+=+t.amount}});
+            drawChart('chart-annual','bar',MONTHS,mData.map(d=>d.inc),['#10b981']);
+            document.getElementById('list-annual').innerHTML=mData.map((d,i)=>`<tr><td class="p-2 border">${MONTHS[i]}</td><td class="p-2 border text-right">${fmt(d.inc)}</td><td class="p-2 border text-right">${fmt(d.exp)}</td><td class="p-2 border text-right font-bold">${fmt(d.inc-d.exp)}</td></tr>`).join('');
+        }
+        function renderSetting(){
+            const mk=(t,id)=>{document.getElementById(id).innerHTML=data.cat.filter(c=>c.type===t).map(c=>`<li class="flex justify-between border-b py-1"><span>${c.name}</span><button onclick="delCat(${c.id})" class="text-red-400 hover:text-red-600">x</button></li>`).join('')}; mk('pemasukan','set-list-in');mk('pengeluaran','set-list-out');
+            const r=document.getElementById('set-list-rec'); r.innerHTML=data.rec.length?data.rec.map(x=>`<tr class="border-b"><td class="p-2">Tgl ${x.day_of_month}</td><td class="p-2">${x.category}</td><td class="p-2 text-right">${fmt(x.amount)}</td><td class="p-2 text-center"><button onclick="delRec(${x.id})" class="text-red-500">Opsi</button></td></tr>`).join(''):'<tr><td colspan="4" class="text-center p-4 text-gray-400">Kosong</td></tr>';
+        }
+
+        // --- ACTIONS ---
+        document.getElementById('form-tx').addEventListener('submit', async e => {
+            e.preventDefault();
+            const p = {
+                date: document.getElementById('inp-date').value, type: document.getElementById('inp-type').value,
+                category: document.getElementById('inp-cat').value, amount: +document.getElementById('inp-amount').value,
+                description: document.getElementById('inp-desc').value, user_id: userId
+            };
+            const id = document.getElementById('inp-id').value;
+
+            if(id) { // Edit Mode
+                if(isOnline) await db.from('transactions').update(p).eq('id', id);
+                else await Local.op('update', 'transactions', p, id);
+            } else {
+                if(isOnline) await db.from('transactions').insert([p]);
+                else await Local.op('insert', 'transactions', p);
+                // Recurring Check
+                if(document.getElementById('inp-rec').checked) {
+                    const r = {...p, day_of_month: new Date(p.date).getDate(), last_generated: p.date}; delete r.date;
+                    if(isOnline) await db.from('recurring_transactions').insert([r]); else await Local.op('insert', 'recurring', r);
+                }
+            }
+            
+            resetForm(); await loadAllData(); renderDashboard(); showToast("Disimpan");
+        });
+
+        document.getElementById('form-category').addEventListener('submit', async e => {
+            e.preventDefault();
+            const p = { name: document.getElementById('cat-name').value, type: document.getElementById('cat-type').value, user_id: userId, budget: 0 };
+            if(isOnline) await db.from('categories').insert([p]); else await Local.op('insert', 'categories', p);
+            hideModal('modal-category'); await loadAllData(); showToast("Kategori ditambah");
+        });
+
         window.editTx = (id) => {
-            const t = allTransactions.find(x => x.id === id);
+            const t = data.tx.find(x => x.id == id);
             if(!t) return;
-            document.getElementById('date').value = t.date;
-            document.getElementById('type').value = t.type;
-            updateCategoryOptions();
-            document.getElementById('category').value = t.category;
-            document.getElementById('amount').value = t.amount;
-            document.getElementById('description').value = t.description.replace(" (Otomatis)", "");
-            document.getElementById('tx-id').value = id;
-            
-            const btn = document.getElementById('btn-save-tx');
-            btn.textContent = "Update"; btn.classList.replace('bg-blue-600', 'bg-yellow-600');
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            document.getElementById('recurring-container').classList.add('hidden');
-            document.getElementById('transaction-form').scrollIntoView();
-        };
-
-        window.delData = (type, id) => { deleteTarget = { type, id }; showModal('delete-modal'); };
-        window.openCategoryModal = (mode, id) => {
-            document.getElementById('category-modal-form').reset();
-            document.getElementById('category-modal-id').value = id || "";
-            if(mode === 'edit') {
-                const c = [...categoriesData.pemasukan, ...categoriesData.pengeluaran].find(x => x.id == id);
-                if(c) { document.getElementById('category-modal-name').value = c.name; document.getElementById('category-modal-type').value = c.type; }
-            }
-            showModal('category-modal');
-        };
-
-        function updateCategoryOptions() {
-            const t = document.getElementById('type').value;
-            const s = document.getElementById('category');
-            s.innerHTML = '';
-            (categoriesData[t]||[]).forEach(c => { const o = document.createElement('option'); o.value = c.name; o.textContent = c.name; s.appendChild(o); });
-            s.disabled = s.options.length === 0;
+            document.getElementById('inp-id').value = id;
+            document.getElementById('inp-date').value = t.date;
+            document.getElementById('inp-type').value = t.type;
+            updateCats();
+            document.getElementById('inp-cat').value = t.category;
+            document.getElementById('inp-amount').value = t.amount;
+            document.getElementById('inp-desc').value = t.description;
+            document.getElementById('btn-save').innerText = "Update";
+            document.getElementById('btn-cancel').classList.remove('hidden');
+            checkBudgetStatus(); // Show budget info on edit too
         }
 
-        function renderMasterSettings() {
-            const makeList = (data, el) => {
-                el.innerHTML = data.map(c => `<li class="flex justify-between py-2 text-sm border-b border-gray-100"><span>${c.name}</span><div><button onclick="window.openCategoryModal('edit',${c.id})" class="text-blue-500 mr-2">Edit</button><button onclick="window.delData('category',${c.id})" class="text-red-500">Hapus</button></div></li>`).join('');
-            };
-            makeList(categoriesData.pemasukan, document.getElementById('master-pemasukan-list'));
-            makeList(categoriesData.pengeluaran, document.getElementById('master-pengeluaran-list'));
-        }
+        window.addCat = () => showModal('modal-category');
+        window.delTx = async(id) => { if(confirm('Hapus?')) { if(isOnline) await db.from('transactions').delete().eq('id',id); else await Local.op('delete','transactions',null,id); await loadAllData(); renderDashboard(); } }
+        window.delCat = async(id) => { if(confirm('Hapus?')) { if(isOnline) await db.from('categories').delete().eq('id',id); else await Local.op('delete','categories',null,id); await loadAllData(); } }
+        window.delRec = async(id) => { if(confirm('Hapus?')) { if(isOnline) await db.from('recurring_transactions').delete().eq('id',id); else await Local.op('delete','recurring',null,id); await loadAllData(); } }
+        window.resetForm = () => { document.getElementById('form-tx').reset(); document.getElementById('inp-id').value=""; document.getElementById('btn-save').innerText="Simpan"; document.getElementById('btn-cancel').classList.add('hidden'); document.getElementById('inp-date').valueAsDate = new Date(); updateCats(); document.getElementById('budget-info-box').classList.add('hidden'); }
 
-        function renderRecurringList(data) {
-            const el = document.getElementById('recurring-list');
-            if(!data.length) { el.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-400">Kosong</td></tr>'; return; }
-            el.innerHTML = data.map(r => `<tr class="border-b"><td class="p-3 text-sm">Tgl ${r.day_of_month}</td><td class="p-3 text-sm capitalize">${r.type}</td><td class="p-3 text-sm">${r.category}</td><td class="p-3 text-sm">${r.description||'-'}</td><td class="p-3 text-sm text-right font-bold">${formatCurrency(r.amount)}</td><td class="p-3 text-center"><button onclick="window.delData('recurring',${r.id})" class="text-red-500"><i class="fas fa-trash"></i></button></td></tr>`).join('');
-        }
-
-        // EVENT LISTENERS
-        document.getElementById('login-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            if(document.getElementById('password').value !== 'alfinrho$') return document.getElementById('login-error').classList.remove('hidden');
-            
-            document.getElementById('login-overlay').classList.add('hidden');
-            document.getElementById('main-app-content').classList.remove('hidden');
-            
-            // Auth Logic
-            let { data: { user } } = await db.auth.getUser();
-            if(!user) {
-                const email = `user${Date.now()}@demo.com`;
-                const { data: up, error } = await db.auth.signUp({ email, password: 'password123' });
-                if(error) return alert("Gagal Login DB: " + error.message);
-                user = up.user;
-            }
-            userId = user.id;
-            document.getElementById('user-id-display').textContent = "ID: " + userId.substring(0,8);
-            
-            initFilters(); // Init UI First
-            loadData();    // Load Data Async
-        });
-
-        document.getElementById('transaction-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            if(!userId) return alert("Sesi habis");
-            const btn = document.getElementById('btn-save-tx');
-            btn.textContent = "Proses..."; btn.disabled = true;
-
-            try {
-                const id = document.getElementById('tx-id').value;
-                const payload = {
-                    date: document.getElementById('date').value,
-                    type: document.getElementById('type').value,
-                    category: document.getElementById('category').value,
-                    amount: document.getElementById('amount').value,
-                    description: document.getElementById('description').value,
-                    user_id: userId
-                };
-
-                if(id) {
-                    await db.from('transactions').update(payload).eq('id', id);
-                    window.cancelEdit();
-                } else {
-                    await db.from('transactions').insert([payload]);
-                    if(document.getElementById('is-recurring').checked) {
-                        const rule = { ...payload, day_of_month: new Date(payload.date).getDate(), last_generated: payload.date };
-                        delete rule.date; 
-                        // Safe check if table exists
-                        try { await db.from('recurring_transactions').insert([rule]); } catch(e){}
-                    }
-                    document.getElementById('transaction-form').reset();
-                    document.getElementById('date').valueAsDate = new Date();
+        async function checkRecurring() {
+            const today = new Date().getDate(), m = new Date().getMonth();
+            let newTx = [];
+            data.rec.forEach(r => {
+                const last = r.last_generated ? new Date(r.last_generated) : null;
+                if((!last || last.getMonth() !== m) && today >= r.day_of_month) {
+                    newTx.push({ date: new Date().toISOString().split('T')[0], type: r.type, category: r.category, amount: r.amount, description: "Otomatis", user_id: userId });
                 }
-                await loadTransactions();
-                if(document.getElementById('is-recurring').checked) await loadRecurring();
-                renderDashboard();
-                showStatus("Berhasil disimpan");
-            } catch (err) { alert("Gagal: " + err.message); }
-            finally { btn.textContent = "Simpan"; btn.disabled = false; }
-        });
-
-        document.getElementById('btn-cancel-edit').addEventListener('click', window.cancelEdit);
-        window.cancelEdit = () => {
-            document.getElementById('transaction-form').reset();
-            document.getElementById('date').valueAsDate = new Date();
-            document.getElementById('tx-id').value = "";
-            const btn = document.getElementById('btn-save-tx');
-            btn.textContent = "Simpan"; btn.classList.replace('bg-yellow-600', 'bg-blue-600');
-            document.getElementById('btn-cancel-edit').classList.add('hidden');
-            document.getElementById('recurring-container').classList.remove('hidden');
-            updateCategoryOptions();
-        };
-
-        document.getElementById('type').addEventListener('change', updateCategoryOptions);
-
-        // Delete Logic
-        document.getElementById('delete-modal-confirm').addEventListener('click', async () => {
-            if(!deleteTarget) return;
-            const { type, id } = deleteTarget;
-            const table = type === 'transaction' ? 'transactions' : type === 'category' ? 'categories' : 'recurring_transactions';
-            await db.from(table).delete().eq('id', id);
-            hideModal('delete-modal');
-            if(type === 'transaction') { await loadTransactions(); renderDashboard(); }
-            else if(type === 'category') { await loadCategories(); }
-            else { await loadRecurring(); }
-        });
-        document.getElementById('delete-modal-cancel').addEventListener('click', () => hideModal('delete-modal'));
-
-        // Category Modal
-        document.getElementById('category-modal-form').addEventListener('submit', async e => {
-            e.preventDefault();
-            const name = document.getElementById('category-modal-name').value;
-            const type = document.getElementById('category-modal-type').value;
-            const id = document.getElementById('category-modal-id').value;
-            const payload = { name, type, user_id: userId };
-            
-            if(id) await db.from('categories').update(payload).eq('id', id);
-            else await db.from('categories').insert([payload]);
-            
-            hideModal('category-modal');
-            await loadCategories();
-        });
-        document.getElementById('category-modal-cancel').addEventListener('click', () => hideModal('category-modal'));
-        document.getElementById('add-category-btn').addEventListener('click', () => window.openCategoryModal('add'));
-
-        // Navigation
-        document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', e => {
-            e.preventDefault();
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('bg-gray-100', 'text-blue-600'));
-            l.classList.add('bg-gray-100', 'text-blue-600');
-            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
-            document.getElementById(l.dataset.view).classList.remove('hidden');
-            
-            if(l.dataset.view === 'view-laporan-bulanan') renderMonthlyReport();
-            // Add other render calls if needed
-        }));
-
-        // Report Filters Change
-        ['monthly-report-month', 'monthly-report-year'].forEach(id => 
-            document.getElementById(id).addEventListener('change', renderMonthlyReport)
-        );
-
-        // PDF & Excel
-        document.getElementById('download-monthly-pdf').addEventListener('click', () => {
-            if(!jsPDF) jsPDF = window.jspdf.jsPDF; // Lazy load check
-            const el = document.querySelector('#view-laporan-bulanan .printable-area');
-            // Temp show charts for PDF
-            html2canvas(el).then(c => {
-                const pdf = new jsPDF('l', 'mm', 'a4');
-                pdf.addImage(c.toDataURL('image/png'), 'PNG', 10, 10, 280, 0);
-                pdf.save('Laporan_Bulanan.pdf');
             });
-        });
+            if(newTx.length) {
+                if(isOnline) await db.from('transactions').insert(newTx); else for(let t of newTx) await Local.op('insert', 'transactions', t);
+                alert(newTx.length + " Transaksi otomatis dibuat!"); await loadAllData();
+            }
+        }
 
-        // Init
-        document.getElementById('date').valueAsDate = new Date();
+        window.updateCats = () => {
+            const type = document.getElementById('inp-type').value;
+            const sel = document.getElementById('inp-cat');
+            sel.innerHTML = data.cat.filter(c => c.type === type).map(c => `<option>${c.name}</option>`).join('');
+            checkBudgetStatus(); // Check immediately after updating options
+        }
+
+        // --- HELPERS ---
+        function fmt(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
+        function drawChart(id, type, labels, data, colors) {
+            const ctx = document.getElementById(id); if(charts[id]) charts[id].destroy();
+            if(type==='doughnut' && !data.length) { labels=['Kosong']; data=[1]; colors=['#eee']; }
+            if(!colors) colors = labels.map((_,i) => `hsl(${i*137.5%360},70%,50%)`);
+            charts[id] = new Chart(ctx, { type, data: { labels, datasets: [{ data, backgroundColor: colors }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+        }
+        window.exportExcel = () => { const ws = XLSX.utils.json_to_sheet(data.tx); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Data"); XLSX.writeFile(wb, "Keuanganku.xlsx"); }
+        window.showModal = (id) => document.getElementById(id).classList.remove('hidden');
+        window.hideModal = (id) => document.getElementById(id).classList.add('hidden');
+        function showToast(msg) { const el = document.getElementById('status-modal'); document.getElementById('status-content').innerText = msg; el.classList.remove('hidden'); setTimeout(() => el.classList.add('hidden'), 3000); }
     </script>
 </body>
 </html>
